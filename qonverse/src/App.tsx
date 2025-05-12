@@ -2,17 +2,21 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-reac
 
 export default function App() {
   return (
-    <header>
-      <h1>Qonverse</h1>
-      <nav>
-        <SignedOut>
-          <SignInButton mode='modal' />
-        </SignedOut>
-        <SignedIn>
-          <UserButton />
-        </SignedIn>
-      </nav>
-      
-    </header>
+    <main>
+      <header>
+        <h1>Qonverse</h1>
+        <nav>
+          <SignedOut>
+            <SignInButton mode='modal' />
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </nav>
+      </header>
+      <SignedIn>
+        <h2>¿De qué quieres conversar hoy?</h2>
+      </SignedIn>
+    </main>
   );
 }
