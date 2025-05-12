@@ -1,13 +1,15 @@
 import React from "react";
+import HomeNav from "./HomeNav";
+import HomeMain from "./HomeMain";
 
 const Home = () => {
 
     return (
-        <div className="hola">
-            <p>Hola final</p>
+        <div className="page-container">
+            <HomeNav />
+            <HomeMain />
         </div>
     )
 };
 
 export default Home;
-
