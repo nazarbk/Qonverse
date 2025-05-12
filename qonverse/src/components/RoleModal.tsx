@@ -15,18 +15,22 @@ const RoleSelectionModal: React.FC<RoleModalProps> = ({ onSelectRole, onClose })
     ]
 
     return (
-        <div>
-            <div>
+        <div className="modal">
+            <div className="modal-content">
                 <p>Elige un rol para comenzar la conversación.</p>
                 <ul>
                     {roles.map((role) => (
                         <li key={role.name}>
-                            <button onClick={() => onSelectRole(role.name)}>
+                            <button onClick={() => onSelectRole(role.name)}>{role.name}</button>
+                            <p>{role.description}</p>
                         </li>
                     ))}
                 </ul>
+                <button className="close-button" onClick={onClose}>Cerrar</button>
             </div>
         </div>
     )
 };
+
+export default RoleSelectionModal;
 
