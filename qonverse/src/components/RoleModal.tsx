@@ -10,5 +10,23 @@ const RoleSelectionModal: React.FC<RoleModalProps> = ({ onSelectRole, onClose })
         { name: "Jefe", description: "Simulación de una reunión de trabajo"},
         { name: "Entrevistador", description: "Simulación de una entrevista de trabajo"},
         { name: "Interés Amoroso", description: "Simulación tipo cita romántica"},
+        { name: "Cliente Enfadado", description: "Simulación de atención a un cliente complicado"},
+        { name: "Vecino Molesto", description: "Simulación de una conversación con un vecino problemático"}
     ]
+
+    return (
+        <div>
+            <div>
+                <p>Elige un rol para comenzar la conversación.</p>
+                <ul>
+                    {roles.map((role) => (
+                        <li key={role.name}>
+                            <button onClick={() => onSelectRole(role.name)}>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+        </div>
+    )
 };
+
