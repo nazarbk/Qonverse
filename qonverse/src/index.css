@@ -80,3 +80,11 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+/* index.css o global
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+*/
