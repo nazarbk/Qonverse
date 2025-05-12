@@ -4,7 +4,7 @@ const Home = () => {
 
     return (
         <div className="hola">
-            <p>Hola feaaa y gordaa jolinessss</p>
+            <p>Hola final</p>
         </div>
     )
 };
