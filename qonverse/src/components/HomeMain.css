@@ -10,3 +10,10 @@
   background-color: #f5f5f5;
   padding: 2rem;
 }*/
+
+.main-logo {
+  font-size: 3rem;
+  transition: transform 1s ease-out;
+  will-change: transform;
+  color: white;
+}

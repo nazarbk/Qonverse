@@ -80,3 +80,32 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+/*body {
+    margin: 0;
+    display: flex;
+    place-items: center;
+    min-height: 100vh;
+    width: 100%;
+    flex: 1;
+    justify-content: center;
+    background: radial-gradient(
+      ellipse at top,
+      #3d5b97 0%,
+      #2a3e66 30%,
+      #1a253d 100%
+    );
+
+}
+*/
+body, main, #root, .page-container {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  display: flex;
+  place-items: center;
+  min-height: 100vh;
+  width: 100%;
+  flex: 1;
+  flex-direction: row;
+  justify-content: center;
+}

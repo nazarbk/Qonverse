@@ -1,6 +1,7 @@
 import React from "react";
 import HomeNav from "./HomeNav";
 import HomeMain from "./HomeMain";
+import './Home.css';
 
 const Home = () => {
 
