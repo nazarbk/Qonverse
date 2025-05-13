@@ -1,11 +1,11 @@
 import React from "react";
 
 interface RoleModalProps {
-    onSelectRole: (role: string) => void;
+    onSelectRole: (role: string, description: string) => void;
     onClose: () => void;
 }
 
-const RoleSelectionModal: React.FC<RoleModalProps> = ({ onSelectRole, onClose }) => {
+const RoleSelectionModal: React.FC<RoleModalProps> = ({ onSelectRole }) => {
     const roles = [
         { name: "Jefe", description: "Simulación de una reunión de trabajo"},
         { name: "Entrevistador", description: "Simulación de una entrevista de trabajo"},
@@ -14,19 +14,25 @@ const RoleSelectionModal: React.FC<RoleModalProps> = ({ onSelectRole, onClose })
         { name: "Vecino Molesto", description: "Simulación de una conversación con un vecino problemático"}
     ]
 
+    const handleRoleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+        const selectedRole = roles.find(role => role.name === event.target.value)
+        if (selectedRole) {
+            onSelectRole(selectedRole.name, selectedRole.description)
+        }
+    }
+
     return (
         <div className="modal">
             <div className="modal-content">
                 <p>Elige un rol para comenzar la conversación.</p>
-                <ul>
+                <select onChange={handleRoleChange} defaultValue="">
+                    <option value="">Selecciona un rol</option>
                     {roles.map((role) => (
-                        <li key={role.name}>
-                            <button onClick={() => onSelectRole(role.name)}>{role.name}</button>
-                            <p>{role.description}</p>
-                        </li>
+                        <option key={role.name} value={role.name}>
+                            {role.name}
+                        </option>
                     ))}
-                </ul>
-                <button className="close-button" onClick={onClose}>Cerrar</button>
+                </select>
             </div>
         </div>
     )
