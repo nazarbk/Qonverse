@@ -16,8 +16,8 @@ export const useRadialMagnetEffect = () => {
       const dy = e.clientY - elCenterY;
       let dist = Math.sqrt(dx * dx + dy * dy);
 
-      const maxRadius = 140;
-      const activationRadius = 200;
+      //const maxRadius = 140;
+      const activationRadius = 150;
 
       // Evita divisiones por cero
       if (dist < 1) dist = 1;
