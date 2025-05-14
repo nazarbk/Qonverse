@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
 
 export const useRadialMagnetEffect = () => {
-  const ref = useRef<HTMLParagraphElement | null>(null);
+  const ref = useRef<HTMLImageElement | null>(null);
 
   useEffect(() => {
     const handleMouseMove = (e: MouseEvent) => {

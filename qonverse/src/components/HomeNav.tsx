@@ -15,7 +15,7 @@ const HomeNav = () => {
                 </a>
             </div>
             <div className="home-nav-2">
-                <SignInButton mode="modal" /> 
+                <SignInButton mode="modal">Iniciar sesión</SignInButton>
             </div>
         </header>
     )
