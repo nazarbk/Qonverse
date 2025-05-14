@@ -1,5 +1,5 @@
 import { SignIn, SignInButton } from "@clerk/clerk-react";
-import './HomeNav.css';
+import './styles/HomeNav.css';
 import React from "react";
 
 const HomeNav = () => {
