@@ -3,6 +3,7 @@ import RoleSelectionModal from './components/RoleModal';
 import Home from './components/Home';
 import React from 'react';
 import { Chat } from 'openai/resources.mjs';
+import ChatBox from './components/ChatBox';
 
 export default function App() {
 
@@ -13,7 +14,7 @@ export default function App() {
         <Home />
       </SignedOut>
       <SignedIn>
-        <h2>¿De qué quieres conversar hoy?</h2>
+        <ChatBox />
       </SignedIn>
     </main>
   );

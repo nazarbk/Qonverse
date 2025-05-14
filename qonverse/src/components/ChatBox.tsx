@@ -94,6 +94,7 @@ const ChatBox = () => {
     return (
 
         <div className='chat-box'>
+            {roleLocked ? "" : <h2>¿De qué quieres conversar hoy?</h2>}
             <div className='message-display'>
                 {messages.map((message, index) => (
                     <div key={index}>
