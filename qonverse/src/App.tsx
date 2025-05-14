@@ -1,20 +1,17 @@
 import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
-import RoleSelectionModal from './components/RoleModal';
 import Home from './components/Home';
-import React from 'react';
-import { Chat } from 'openai/resources.mjs';
+import React, {useEffect} from 'react';
 import ChatBox from './components/ChatBox';
+import FirestoreTest from './components/FirestoreTest';
 
 export default function App() {
-
-
   return (
     <main>
       <SignedOut>
         <Home />
       </SignedOut>
       <SignedIn>
-        <ChatBox />
+        <FirestoreTest />
       </SignedIn>
     </main>
   );
