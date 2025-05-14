@@ -1,5 +1,5 @@
 import { SignIn, SignInButton } from "@clerk/clerk-react";
-import './HomeMain.css';
+import './styles/HomeMain.css';
 import { useRadialMagnetEffect } from "./effects/useMagnetEffect";
 import React from "react";
 import logo from '../assets/qonverse-v2.svg';
