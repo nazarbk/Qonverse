@@ -2,6 +2,7 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-reac
 import ChatBox from './components/ChatBox';
 import Home from './components/Home';
 import React from 'react';
+import { Chat } from 'openai/resources.mjs';
 
 
 export default function App() {

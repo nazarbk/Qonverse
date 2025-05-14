@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { LuCircleFadingPlus } from "react-icons/lu";
 import { IoSend } from "react-icons/io5";
 //import OpenAI from 'openai';
+import { GoogleGenAI } from '@google/genai';
 
 
 const ChatBox = () => {
@@ -13,7 +14,7 @@ const ChatBox = () => {
     const [roleLocked, setRoleLocked] = useState(false)
     const [behaviorLocked, setBehaviorLocked] = useState(false)
     const [placeHolderResponse, setPlaceHolderResponse] = useState(false)
-
+    let airesponse = ""
 
 
     const handleRoleChange = (event) => {
@@ -32,14 +33,52 @@ const ChatBox = () => {
         }
     }
 
-    const handleSendMessage = () => {
-        console.log(selectedBehavior)
-        console.log(selectedRole)
+    const handleSendMessage = async () => {
+        const apiKeyGem = import.meta.env.VITE_HUGGINGFACE_API_TOKEN
+
+        const ai = new GoogleGenAI({apiKey: apiKeyGem})
+
+        async function main(context) {
+            let prompt = ""
+            try {
+                if (roleLocked == false){
+                    prompt =`Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.
+                    La situación es la siguiente: ${context}.
+                    
+                    Quiero que te comportes a lo largo de toda esta conversación acorde a tu rol y mantengas el rono de acuerdo al comportamiento definido.
+                    Responde de manera coherente y sigue el flujo de la conversación teniendo en cuenta el contexto proporcionado.
+                    
+                    Si hay algún dato que no sepas sobre ti o sobre tu contexto inventatelo.
+                    No te salgas del rol en nigún momento, es decir si te hago una pregunta que no esté relacionada con el contexto de la conversación adviérteme.
+                    
+                    Comienza saludando y preguntando lo necesario para cumplir con tu rol de manera efectiva.
+                    
+                    Que quede claro que quiero que actues como tu rol. Yo seré el que tenga la conversación contigo intentando solucionar o lidiar con la situación del contexto.`
+                }
+                else{
+                    prompt = context
+                }
+                console.log("PROMPT: ", prompt)
+                const response = await ai.models.generateContent({
+                    model: "gemini-2.0-flash",
+                    contents: prompt,
+                });
+
+                airesponse = response?.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo obtener respuesta de Gemini"
+                console.log("AIRESPONSE", airesponse)
+            } catch (error) {
+                console.error("Error al llamar a Gemini:", error);
+            }
+
+            return airesponse
+        }
 
         if(selectedBehavior != "" && selectedRole != ""){
             if (context.trim()) {
                 const userMessage = {sender: "Tú", text: context}
-                const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: "Esta es una respuesta simulada basada en el contexto"}
+                const airesponse = await main(context)
+                const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: airesponse}
+
                 setMessages([...messages, userMessage, simulatedResponse])
                 setContext("")
                 setRoleLocked(true)
