@@ -2,7 +2,6 @@ import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-reac
 import Home from './components/Home';
 import React, {useEffect} from 'react';
 import ChatBox from './components/ChatBox';
-import FirestoreTest from './components/FirestoreTest';
 
 export default function App() {
   return (
@@ -11,7 +10,7 @@ export default function App() {
         <Home />
       </SignedOut>
       <SignedIn>
-        <FirestoreTest />
+        <ChatBox />
       </SignedIn>
     </main>
   );

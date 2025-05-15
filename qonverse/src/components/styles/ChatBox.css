@@ -86,4 +86,14 @@
     padding: 0px 20px;
 }
 
+.history_chats button{
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 259px;
+    max-width: 100%;
+    display: inline-block;
+    margin: 10px;
+    text-align: left;
+}
 

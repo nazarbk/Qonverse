@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { LuCircleFadingPlus } from "react-icons/lu";
 import { IoSend } from "react-icons/io5";
 //import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
+import { useUser } from "@clerk/clerk-react";
+import { initializeConversation, sendMessage, loadConversation } from "../services/fireStoreService";
 
 const ChatBox = () => {
     const [selectedRole, setSelectedRole] = useState("")
@@ -14,6 +16,15 @@ const ChatBox = () => {
     const [behaviorLocked, setBehaviorLocked] = useState(false)
     const [placeHolderResponse, setPlaceHolderResponse] = useState(false)
     let airesponse = ""
+    const [conversationId, setConversationId] = useState<string | "">("")
+    const {user} = useUser()
+    const [chats, setChats] = useState<any[]>([])
+
+    useEffect(() => {
+        if(user){
+            handleLoadConversations()
+        }
+    }, [user])
 
 
     const handleRoleChange = (event) => {
@@ -30,6 +41,14 @@ const ChatBox = () => {
         if(!behaviorLocked){
             setSelectedBehavior(behavior)
         }
+    }
+
+    const startNewConversation = async (userId: string, role: string, behavior: string, airesponse: string) => {
+        const id = await initializeConversation(userId, role, behavior)
+        await sendMessage(user?.primaryEmailAddress?.emailAddress as string, id, context, airesponse)
+        await setConversationId(id)
+        console.log("Conversacuón iniciada con ID: ", id)
+        await handleLoadConversations()
     }
 
     const handleSendMessage = async () => {
@@ -77,12 +96,19 @@ const ChatBox = () => {
                 const userMessage = {sender: "Tú", text: context}
                 const airesponse = await main(context)
                 const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: airesponse}
-
+                if (roleLocked == false){
+                    startNewConversation(user?.primaryEmailAddress?.emailAddress as string, selectedRole, selectedBehavior, airesponse)
+                }
+                else{
+                    await sendMessage(user?.primaryEmailAddress?.emailAddress as string, conversationId, context, airesponse)
+                    await handleLoadConversations()
+                }
                 setMessages([...messages, userMessage, simulatedResponse])
                 setContext("")
                 setRoleLocked(true)
                 setBehaviorLocked(true)
                 setPlaceHolderResponse(true)
+                
             }
         }else{
                alert("Debes seleccionar un rol y un comportamiento")
@@ -90,11 +116,34 @@ const ChatBox = () => {
         
     }
 
+    const handleLoadConversations = async () => {
+        if (user){
+            setChats(await loadConversation(user?.primaryEmailAddress?.emailAddress as string))
+        }
+    }
+
     return (
 
         <div className='chat-box'>
             <div className='left-bar-menu'>
                 <div>Historial de conversaciones</div>
+                <button onClick={handleLoadConversations}>
+                    Ver conversación
+                </button>
+                <div>
+                    {chats.length > 0 ? (
+                        chats.map((chat) => (
+                            <div key={chat.id} className="history_chats">
+                                <button title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
+                                    {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
+                                </button>
+                            </div>
+                        ))
+                    ) : (
+                        <p>No hay conversaciones cargadas</p>
+                    )}
+                </div>
+
                 <div>Planes de suscripción</div>
             </div>
             <div className='main-content'>
