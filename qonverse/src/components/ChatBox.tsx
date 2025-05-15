@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { LuCircleFadingPlus } from "react-icons/lu";
 import { IoSend } from "react-icons/io5";
+import { BsThreeDotsVertical } from "react-icons/bs";
 //import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
@@ -129,23 +130,35 @@ const ChatBox = () => {
     const handleLoadChat = async (chatId) => {
         const convers =  await loadConversation(user?.primaryEmailAddress?.emailAddress as string)
         const selectedConver = convers.find(chat => chat.id === chatId)
-        const behavior = selectedConver.behavior
-        const rol = selectedConver.role
 
-        setSelectedRole(rol)
-        setSelectedBehavior(behavior)
-        setBehaviorLocked(true)
-        setRoleLocked(true)
+        await setConversationId(chatId)
+        
+        if (selectedConver){
+            const behavior = selectedConver.behavior
+            const rol = selectedConver.role
+            setSelectedRole(rol)
+            setSelectedBehavior(behavior)
+            setBehaviorLocked(true)
+            setRoleLocked(true)
 
-        selectedConver?.messages.forEach((msg) => {
-            const userMessage = {sender: "Tú", text: msg.user}
-            const simulatedResponse = {sender: rol + " (" + behavior + ")", text: msg.ai}
-            setMessages([userMessage, simulatedResponse])
-            console.log("Mensaje de la IA: ", msg.ai)
-            console.log("Mensaje del Usuario: ", msg.user)
-        })
+            const loadedMessages = []
 
-        console.log("Conversación Encontrada", selectedConver)
+            selectedConver?.messages.forEach((msg) => {
+                const userMessage = {sender: "Tú", text: msg.user}
+                const simulatedResponse = {sender: rol + " (" + behavior + ")", text: msg.ai}
+
+                loadedMessages.push(userMessage)
+                loadedMessages.push(simulatedResponse)
+
+                console.log("Mensaje de la IA: ", msg.ai)
+                console.log("Mensaje del Usuario: ", msg.user)
+            })
+
+            setMessages(loadedMessages)
+            console.log("Mensajes cargados: ", loadedMessages)
+            console.log("Conversación Encontrada: ", selectedConver)
+        }
+        
         
     }
 
@@ -161,8 +174,11 @@ const ChatBox = () => {
                     {chats.length > 0 ? (
                         chats.map((chat) => (
                             <div key={chat.id} className="history_chats">
-                                <button onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
+                                <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
                                     {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
+                                </button>
+                                <button className='button_settings_chat'>
+                                    <BsThreeDotsVertical />
                                 </button>
                             </div>
                         ))

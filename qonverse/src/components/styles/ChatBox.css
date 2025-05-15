@@ -86,14 +86,25 @@
     padding: 0px 20px;
 }
 
-.history_chats button{
+.history_chats{
+    display: flex;
+    background-color: #1a1a1a;
+    border-radius: 10px;
+    margin-top: 15px;
+    justify-content: space-between;
+}
+
+.button_history_chats{
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    width: 259px;
-    max-width: 100%;
     display: inline-block;
-    margin: 10px;
     text-align: left;
+    background-color: transparent;
+    padding: 10px;
+}
+.button_settings_chat{
+    background-color: transparent;
+    padding: 10px;
 }
 
