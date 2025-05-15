@@ -122,19 +122,46 @@ const ChatBox = () => {
         }
     }
 
+    const handleLoadMensajes = () => {
+        console.log("Mensajes: ", messages)
+    }
+
+    const handleLoadChat = async (chatId) => {
+        const convers =  await loadConversation(user?.primaryEmailAddress?.emailAddress as string)
+        const selectedConver = convers.find(chat => chat.id === chatId)
+        const behavior = selectedConver.behavior
+        const rol = selectedConver.role
+
+        setSelectedRole(rol)
+        setSelectedBehavior(behavior)
+        setBehaviorLocked(true)
+        setRoleLocked(true)
+
+        selectedConver?.messages.forEach((msg) => {
+            const userMessage = {sender: "Tú", text: msg.user}
+            const simulatedResponse = {sender: rol + " (" + behavior + ")", text: msg.ai}
+            setMessages([userMessage, simulatedResponse])
+            console.log("Mensaje de la IA: ", msg.ai)
+            console.log("Mensaje del Usuario: ", msg.user)
+        })
+
+        console.log("Conversación Encontrada", selectedConver)
+        
+    }
+
     return (
 
         <div className='chat-box'>
             <div className='left-bar-menu'>
                 <div>Historial de conversaciones</div>
-                <button onClick={handleLoadConversations}>
+                <button onClick={handleLoadMensajes}>
                     Ver conversación
                 </button>
                 <div>
                     {chats.length > 0 ? (
                         chats.map((chat) => (
                             <div key={chat.id} className="history_chats">
-                                <button title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
+                                <button onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
                                     {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
                                 </button>
                             </div>
