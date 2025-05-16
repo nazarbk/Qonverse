@@ -1,5 +1,5 @@
 import { firestore } from "../firebase"
-import { collection, doc, setDoc, updateDoc, arrayUnion, getDocs, Timestamp } from "firebase/firestore"
+import { collection, doc, setDoc, updateDoc, arrayUnion, getDocs, Timestamp, deleteDoc } from "firebase/firestore"
 
 // Inicializar una nueva conversación
 export async function initializeConversation(userId: string, role: string, behavior: string) {
@@ -39,4 +39,17 @@ export async function loadConversation(userId: string) {
 
     console.log("Todas las conversaciones: ", conversations)
     return conversations
+}
+
+// Eliminar una conversación
+export async function deleteConversation(userId: string, conversationId: string){
+    try{
+        const conversationRef = doc(firestore, "conversations", userId, "chats", conversationId)
+        await deleteDoc(conversationRef)
+        console.log("Conversación eliminada:", conversationId) 
+        return true
+    }catch(error){
+        console.log("Error al eliminar la conversación", error)
+        return false
+    }
 }

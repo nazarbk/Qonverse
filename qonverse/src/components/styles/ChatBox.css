@@ -92,6 +92,13 @@
     border-radius: 10px;
     margin-top: 15px;
     justify-content: space-between;
+    transition: opacity 0.5 ease-out, transform 0.5 ease-out;
+}
+
+.history_chats.fade-out {
+    opacity: 0;
+    transform: translateX(-20px);
+    pointer-events: none;
 }
 
 .button_history_chats{
@@ -103,6 +110,7 @@
     background-color: transparent;
     padding: 10px;
 }
+
 .button_settings_chat{
     background-color: transparent;
     padding: 10px;

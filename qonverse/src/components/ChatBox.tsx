@@ -6,7 +6,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
 import { useUser } from "@clerk/clerk-react";
-import { initializeConversation, sendMessage, loadConversation } from "../services/fireStoreService";
+import { initializeConversation, sendMessage, loadConversation, deleteConversation } from "../services/fireStoreService";
 
 const ChatBox = () => {
     const [selectedRole, setSelectedRole] = useState("")
@@ -162,13 +162,40 @@ const ChatBox = () => {
         
     }
 
+    const handleDeleteChat = async (chatId) => {
+        const confirmation = confirm("Estas seguro de que deseas eliminar esta conversación")
+        if (! confirmation) {
+            return
+        }
+
+        const success = await deleteConversation(user?.primaryEmailAddress?.emailAddress, chatId)
+
+        if (success) {
+            await handleLoadConversations()
+            setMessages([])
+
+        }else{
+            console.log("No se pudo eliminar el chat")
+        }
+    }
+
+    const startNewChat = () => {
+        setMessages([])
+        setBehaviorLocked(false)
+        setRoleLocked(false)
+        setSelectedRole("")
+        setSelectedBehavior("")
+        setPlaceHolderResponse(false)
+        setContext("")
+    }
+
     return (
 
         <div className='chat-box'>
             <div className='left-bar-menu'>
                 <div>Historial de conversaciones</div>
-                <button onClick={handleLoadMensajes}>
-                    Ver conversación
+                <button onClick={startNewChat}>
+                    Nueva Conversación
                 </button>
                 <div>
                     {chats.length > 0 ? (
@@ -177,7 +204,7 @@ const ChatBox = () => {
                                 <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
                                     {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
                                 </button>
-                                <button className='button_settings_chat'>
+                                <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
                                     <BsThreeDotsVertical />
                                 </button>
                             </div>
@@ -249,7 +276,7 @@ const ChatBox = () => {
                         </div>
 
                         <div className='action-buttons'>
-                            <button className='new-chat-button' style={{marginRight: "15px"}}><LuCircleFadingPlus /></button>
+                            <button className='new-chat-button' onClick={startNewChat} style={{marginRight: "15px"}}><LuCircleFadingPlus /></button>
                             <button className='send-button' disabled={context ? false : true} onClick={handleSendMessage}><IoSend /></button>
                         </div>
                     </div>
