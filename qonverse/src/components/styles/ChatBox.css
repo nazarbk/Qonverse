@@ -25,9 +25,6 @@
 .chat-area textarea {
     color: #e3e3dd;
 }
-.chat-area option, .chat-area select, .action-buttons button svg{
-    color: #e3e3dd;
-}
 .ai-message {
     display: flex;
     justify-content: flex-start;

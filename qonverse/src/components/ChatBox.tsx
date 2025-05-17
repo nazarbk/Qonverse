@@ -6,7 +6,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
 import { useUser } from "@clerk/clerk-react";
-import { initializeConversation, sendMessage, loadConversation, deleteConversation } from "../services/fireStoreService";
+import { initializeConversation, sendMessage, loadConversation, deleteConversation, checkAndUpdateLimits, updateLimits } from "../services/fireStoreService";
 
 const ChatBox = () => {
     const [selectedRole, setSelectedRole] = useState("")
@@ -53,12 +53,31 @@ const ChatBox = () => {
     }
 
     const handleSendMessage = async () => {
-        const apiKeyGem = import.meta.env.VITE_HUGGINGFACE_API_TOKEN
+        const userId = user?.primaryEmailAddress?.emailAddress
 
+        const{ canStartConversation, canSendMessage } = await checkAndUpdateLimits(userId, conversationId)
+
+        if(!canStartConversation){
+            alert("Has alcanzado el límite de 3 conversaciones por día. Adquiere el plan premium para continuar.")
+            return
+        }
+
+        if(!canSendMessage){
+            alert("Has alcanzado el límite de mensajes en esta conversación. Adquiere el plan premium para continuar")
+            return
+        }
+
+        const apiKeyGem = import.meta.env.VITE_HUGGINGFACE_API_TOKEN
         const ai = new GoogleGenAI({apiKey: apiKeyGem})
+
+        const initialContext = `Contexto inicial: ${context}\n\n`
+        const recentMessages = messages.slice(-3).map((msg) => `${msg.sender}: ${msg.text}`).join("\n")
+
+        const fullContext = `${initialContext}${recentMessages}\nTú: ${context}` 
 
         async function main(context) {
             let prompt = ""
+            //let prompt =  prompt = `Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.  La situación es la siguiente: \n${fullContext}.`
             try {
                 if (roleLocked == false){
                     prompt =`Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.
@@ -98,11 +117,13 @@ const ChatBox = () => {
                 const airesponse = await main(context)
                 const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: airesponse}
                 if (roleLocked == false){
-                    startNewConversation(user?.primaryEmailAddress?.emailAddress as string, selectedRole, selectedBehavior, airesponse)
+                    await startNewConversation(user?.primaryEmailAddress?.emailAddress as string, selectedRole, selectedBehavior, airesponse)
+                    await updateLimits(userId, conversationId, true)
                 }
                 else{
                     await sendMessage(user?.primaryEmailAddress?.emailAddress as string, conversationId, context, airesponse)
                     await handleLoadConversations()
+                    await updateLimits(userId, conversationId, false)
                 }
                 setMessages([...messages, userMessage, simulatedResponse])
                 setContext("")
@@ -112,7 +133,7 @@ const ChatBox = () => {
                 
             }
         }else{
-               alert("Debes seleccionar un rol y un comportamiento")
+            alert("Debes seleccionar un rol y un comportamiento")
         }
         
     }
@@ -121,10 +142,6 @@ const ChatBox = () => {
         if (user){
             setChats(await loadConversation(user?.primaryEmailAddress?.emailAddress as string))
         }
-    }
-
-    const handleLoadMensajes = () => {
-        console.log("Mensajes: ", messages)
     }
 
     const handleLoadChat = async (chatId) => {

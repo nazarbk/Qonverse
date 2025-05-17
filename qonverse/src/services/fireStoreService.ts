@@ -1,5 +1,5 @@
 import { firestore } from "../firebase"
-import { collection, doc, setDoc, updateDoc, arrayUnion, getDocs, Timestamp, deleteDoc } from "firebase/firestore"
+import { collection, doc, setDoc, updateDoc, arrayUnion, getDocs, getDoc, Timestamp, deleteDoc } from "firebase/firestore"
 
 // Inicializar una nueva conversación
 export async function initializeConversation(userId: string, role: string, behavior: string) {
@@ -52,4 +52,62 @@ export async function deleteConversation(userId: string, conversationId: string)
         console.log("Error al eliminar la conversación", error)
         return false
     }
+}
+
+export async function checkAndUpdateLimits(userId: string, conversationId?: string){
+    const limitsRef = doc(firestore, "conversation_limits", userId)
+    const docSnap = await getDoc(limitsRef)
+    const today = new Date().toISOString().split("T")[0]
+
+    if (!docSnap.exists()) {
+        await setDoc(limitsRef, {
+            date: today,
+            conversationCount: 0,
+            messageCounts: {}
+        })
+    }
+
+    const limits = docSnap.exists() ? docSnap.data() : {date: today, conversationCount: 0, messageCounts: {}}
+
+    if (limits.date !== today){
+        await setDoc(limitsRef, {
+            date: today,
+            conversationCount: 0,
+            messageCounts: {}
+        })
+        return {canStartConversation: true, canSendMessage: true}
+    }
+        
+
+    if (limits.conversationCount >= 3 && !conversationId) {
+        return {canStartConversation: false, canSendMessage: false}
+    }
+
+    if (conversationId) {
+        const messageCount = limits.messageCounts[conversationId] || 0
+        if (messageCount >= 10){
+            return {canStartConversation: true, canSendMessage: false}
+        }
+    }
+
+    return {canStartConversation: true, canSendMessage: true}
+}
+
+// Actualizar contadores de límites
+export async function updateLimits(userId: string, conversationId: string, isNewConversation = false){
+    const limitsRef = doc(firestore, "conversation_limits", userId)
+    const docSnap = await getDoc(limitsRef)
+
+    if(!docSnap.exists()) return
+
+    const limits = docSnap.data()
+    if(isNewConversation){
+        limits.conversationCount += 1
+    }
+
+    if(conversationId) {
+        limits.messageCounts[conversationId] = (limits.messageCounts[conversationId] || 0) + 1
+    }
+
+    await updateDoc(limitsRef, limits)
 }
