@@ -13,6 +13,11 @@ const ChatBox = () => {
         sender: string;
         text: string;
     };
+    type Conversation = {
+        id: string;
+        behavior?: string;
+        role?: string;
+    };
     const [selectedRole, setSelectedRole] = useState("")
     const [context, setContext] = useState("")
     const [selectedBehavior, setSelectedBehavior] = useState("")
@@ -52,7 +57,7 @@ const ChatBox = () => {
         const id = await initializeConversation(userId, role, behavior)
         await sendMessage(user?.primaryEmailAddress?.emailAddress as string, id, context, airesponse)
         await setConversationId(id)
-        console.log("Conversacuón iniciada con ID: ", id)
+        console.log("Conversación iniciada con ID: ", id)
         await handleLoadConversations()
     }
 
@@ -154,20 +159,20 @@ const ChatBox = () => {
     }
 
     const handleLoadChat = async (chatId: string) => {
-        const convers =  await loadConversation(user?.primaryEmailAddress?.emailAddress as string)
+        const convers: Conversation[]  =  await loadConversation(user?.primaryEmailAddress?.emailAddress as string);
         const selectedConver = convers.find(chat => chat.id === chatId)
 
-        await setConversationId(chatId)
+        await setConversationId(chatId);
         
         if (selectedConver){
-            const behavior = selectedConver.behavior
+            const behavior = selectedConver.behavior;
             const rol = selectedConver.role
             setSelectedRole(rol)
             setSelectedBehavior(behavior)
             setBehaviorLocked(true)
             setRoleLocked(true)
 
-            const loadedMessages = []
+            const loadedMessages: Message[] = [];
 
             selectedConver?.messages.forEach((msg) => {
                 const userMessage = {sender: "Tú", text: msg.user}
@@ -184,8 +189,6 @@ const ChatBox = () => {
             console.log("Mensajes cargados: ", loadedMessages)
             console.log("Conversación Encontrada: ", selectedConver)
         }
-        
-        
     }
 
     const handleDeleteChat = async (chatId: string) => {
@@ -205,7 +208,6 @@ const ChatBox = () => {
         if (success) {
             await handleLoadConversations();
             setMessages([]);
-
         }else{
             console.log("No se pudo eliminar el chat");
         }
@@ -224,28 +226,33 @@ const ChatBox = () => {
     return (
         <div className='chat-box'>
             <div className='left-bar-menu'>
-                <div>Historial de conversaciones</div>
-                <button onClick={startNewChat}>
-                    Nueva Conversación
-                </button>
-                <div>
-                    {chats.length > 0 ? (
-                        chats.map((chat) => (
-                            <div key={chat.id} className="history_chats">
-                                <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
-                                    {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
-                                </button>
-                                <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
-                                    <BsThreeDotsVertical />
-                                </button>
-                            </div>
-                        ))
-                    ) : (
-                        <p>No hay conversaciones cargadas</p>
-                    )}
+                <div className='left-bar-menu-up'>
+                    <div className='new-chat'>
+                        <button onClick={startNewChat}>
+                            Nueva Conversación
+                        </button>
+                    </div>
+                    <div className='chats-history'>
+                        <div>Historial de conversaciones</div>
+                        <div className='chats-section'>
+                            {chats.length > 0 ? (
+                                chats.map((chat) => (
+                                    <div key={chat.id} className="history_chats">
+                                        <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
+                                            {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
+                                        </button>
+                                        <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
+                                            <BsThreeDotsVertical />
+                                        </button>
+                                    </div>
+                                ))
+                            ) : (
+                                <p>No hay conversaciones cargadas</p>
+                            )}
+                        </div>
+                    </div>
                 </div>
-
-                <div>Planes de suscripción</div>
+                <div className='left-bar-menu-down'>Planes de suscripción</div>
             </div>
             <div className='main-content'>
                 {roleLocked ? "" : <h2>¿De qué quieres conversar hoy?</h2>}

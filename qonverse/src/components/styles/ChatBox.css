@@ -13,6 +13,7 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    padding-right: 20px;
 }
 .message-line {
     width: 100%;
@@ -78,14 +79,11 @@
     margin: 0;
     border-radius: 20px;
 }
-
-/**************/
 .message-display {
     overflow: auto;
     max-height: 480px;
     padding: 0px 20px;
 }
-
 .history_chats{
     display: flex;
     background-color: #1a1a1a;
@@ -94,13 +92,11 @@
     justify-content: space-between;
     transition: opacity 0.5 ease-out, transform 0.5 ease-out;
 }
-
 .history_chats.fade-out {
     opacity: 0;
     transform: translateX(-20px);
     pointer-events: none;
 }
-
 .button_history_chats{
     white-space: nowrap;
     overflow: hidden;
@@ -110,9 +106,52 @@
     background-color: transparent;
     padding: 10px;
 }
-
 .button_settings_chat{
     background-color: transparent;
     padding: 10px;
 }
-
+.chats-history {
+    padding: 25px 0px;
+}
+.left-bar-menu button {
+    color: #e3e3dd
+}
+.chats-section {
+    max-height: 70vh; 
+    overflow-y: auto;
+    width: 100%;
+    box-sizing: border-box;
+    padding-right: 5px;
+}
+button.button_history_chats {
+    width: 100%;
+}
+.new-chat button {
+    width: 100%;
+}
+/* Scrollbar Chats Style */
+/* WebKit browsers (Chrome, Edge, Safari, Opera) */
+.chats-section::-webkit-scrollbar {
+  width: 8px;
+}
+.chats-section::-webkit-scrollbar-track {
+  background: #f0f0f0;
+  border-radius: 4px;
+}
+.chats-section::-webkit-scrollbar-thumb {
+  background-color: #888;
+  border-radius: 4px;
+  border: 40px solid transparent;
+}
+.chats-section::-webkit-scrollbar-thumb:hover {
+  background-color: #2a3e66 ;
+}
+/* Firefox */
+.chats-section {
+  scrollbar-width: thin;
+  scrollbar-color: #0d1321 #37383a;
+}
+/* Opcional: evitar que la barra de scroll haga saltos */
+.chats-section {
+  -webkit-overflow-scrolling: touch; /* para scroll suave en iOS */
+}
