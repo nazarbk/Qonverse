@@ -9,10 +9,14 @@ import { useUser } from "@clerk/clerk-react";
 import { initializeConversation, sendMessage, loadConversation, deleteConversation, checkAndUpdateLimits, updateLimits } from "../services/fireStoreService";
 
 const ChatBox = () => {
+    type Message = {
+        sender: string;
+        text: string;
+    };
     const [selectedRole, setSelectedRole] = useState("")
     const [context, setContext] = useState("")
     const [selectedBehavior, setSelectedBehavior] = useState("")
-    const [messages, setMessages] = useState([])
+    const [messages, setMessages] = useState<Message[]>([]);
     const [roleLocked, setRoleLocked] = useState(false)
     const [behaviorLocked, setBehaviorLocked] = useState(false)
     const [placeHolderResponse, setPlaceHolderResponse] = useState(false)
@@ -28,17 +32,17 @@ const ChatBox = () => {
     }, [user])
 
 
-    const handleRoleChange = (event) => {
+    const handleRoleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
         if(!roleLocked){
             setSelectedRole(event.target.value)
         }
     }
 
-    const handleContextChange = (event) => {
+    const handleContextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
         setContext(event.target.value)
     }
 
-    const handleBehaviorClick = (behavior) => {
+    const handleBehaviorClick = (behavior: string) => {
         if(!behaviorLocked){
             setSelectedBehavior(behavior)
         }
@@ -53,9 +57,14 @@ const ChatBox = () => {
     }
 
     const handleSendMessage = async () => {
-        const userId = user?.primaryEmailAddress?.emailAddress
+        const userId = user?.primaryEmailAddress?.emailAddress;
 
-        const{ canStartConversation, canSendMessage } = await checkAndUpdateLimits(userId, conversationId)
+        if (!userId) {
+            console.log("No se encontró el email del usuario, no se puede enviar el mensaje.");
+            return;
+        }
+
+        const{ canStartConversation, canSendMessage } = await checkAndUpdateLimits(userId, conversationId);
 
         if(!canStartConversation){
             alert("Has alcanzado el límite de 3 conversaciones por día. Adquiere el plan premium para continuar.")
@@ -71,11 +80,11 @@ const ChatBox = () => {
         const ai = new GoogleGenAI({apiKey: apiKeyGem})
 
         const initialContext = `Contexto inicial: ${context}\n\n`
-        const recentMessages = messages.slice(-3).map((msg) => `${msg.sender}: ${msg.text}`).join("\n")
+        const recentMessages = messages.slice(-3).map((msg) => `${msg.sender}: ${msg.text}`).join("\n");
 
         const fullContext = `${initialContext}${recentMessages}\nTú: ${context}` 
 
-        async function main(context) {
+        async function main(context: any) {
             let prompt = ""
             //let prompt =  prompt = `Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.  La situación es la siguiente: \n${fullContext}.`
             try {
@@ -140,11 +149,11 @@ const ChatBox = () => {
 
     const handleLoadConversations = async () => {
         if (user){
-            setChats(await loadConversation(user?.primaryEmailAddress?.emailAddress as string))
+            setChats(await loadConversation(user?.primaryEmailAddress?.emailAddress as string));
         }
     }
 
-    const handleLoadChat = async (chatId) => {
+    const handleLoadChat = async (chatId: string) => {
         const convers =  await loadConversation(user?.primaryEmailAddress?.emailAddress as string)
         const selectedConver = convers.find(chat => chat.id === chatId)
 
@@ -179,20 +188,26 @@ const ChatBox = () => {
         
     }
 
-    const handleDeleteChat = async (chatId) => {
+    const handleDeleteChat = async (chatId: string) => {
         const confirmation = confirm("Estas seguro de que deseas eliminar esta conversación")
         if (! confirmation) {
-            return
+            return;
         }
 
-        const success = await deleteConversation(user?.primaryEmailAddress?.emailAddress, chatId)
+        const email = user?.primaryEmailAddress?.emailAddress;
+        if (!email) {
+            console.log("No se encontró el email del usuario, no se puede eliminar la conversación.");
+            return;
+        }
+
+        const success = await deleteConversation(email, chatId);
 
         if (success) {
-            await handleLoadConversations()
-            setMessages([])
+            await handleLoadConversations();
+            setMessages([]);
 
         }else{
-            console.log("No se pudo eliminar el chat")
+            console.log("No se pudo eliminar el chat");
         }
     }
 
@@ -207,7 +222,6 @@ const ChatBox = () => {
     }
 
     return (
-
         <div className='chat-box'>
             <div className='left-bar-menu'>
                 <div>Historial de conversaciones</div>
@@ -262,7 +276,7 @@ const ChatBox = () => {
                     </div>
 
                     <div className='text-area' style={{marginTop: "10px", boxSizing: "border-box", overflow: "hidden"}}>
-                        <textarea placeholder={placeHolderResponse ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} value={context} onChange={handleContextChange} rows="3" style={{width: "100%", resize: "none", fontSize: "15px", backgroundColor: "transparent", border: "none"}}></textarea>
+                        <textarea placeholder={placeHolderResponse ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} value={context} onChange={handleContextChange} rows={3} style={{width: "100%", resize: "none", fontSize: "15px", backgroundColor: "transparent", border: "none"}}></textarea>
                     </div>
 
                     <div className='option-area' style={{marginTop: "10px", display: "flex", alignItems: "center"}}>
