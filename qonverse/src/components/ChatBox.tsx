@@ -7,6 +7,7 @@ import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
 import { useUser } from "@clerk/clerk-react";
 import { initializeConversation, sendMessage, loadConversation, deleteConversation, checkAndUpdateLimits, updateLimits } from "../services/fireStoreService";
+import logo from '../assets/qonverse-v2.svg';
 
 const ChatBox = () => {
     type Message = {
@@ -223,99 +224,116 @@ const ChatBox = () => {
         setContext("")
     }
 
+    const [menuVisible, setMenuVisible] = useState(true);
+    const toggleMenu = () => {
+        setMenuVisible(prev => !prev);
+    };
+
     return (
-        <div className='chat-box'>
-            <div className='left-bar-menu'>
-                <div className='left-bar-menu-up'>
-                    <div className='new-chat'>
-                        <button onClick={startNewChat}>
-                            Nueva Conversación
-                        </button>
-                    </div>
-                    <div className='chats-history'>
-                        <div>Historial de conversaciones</div>
-                        <div className='chats-section'>
-                            {chats.length > 0 ? (
-                                chats.map((chat) => (
-                                    <div key={chat.id} className="history_chats">
-                                        <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
-                                            {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
-                                        </button>
-                                        <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
-                                            <BsThreeDotsVertical />
-                                        </button>
-                                    </div>
-                                ))
-                            ) : (
-                                <p>No hay conversaciones cargadas</p>
-                            )}
+        <div className={`chat-box ${menuVisible ? '' : 'chat-box-collapsed'}`}>
+            <div className={`vertical-menu ${menuVisible ? '' : 'menu-collapsed'}`}>
+                <button id="toggle-menu-btn" onClick={toggleMenu}>☰</button>
+                <div className='left-bar-menu'>
+                    <div className='left-bar-menu-up'>
+                        <div className='new-chat'>
+                            <button onClick={startNewChat}>
+                                Nueva Conversación
+                            </button>
+                        </div>
+                        <div className='chats-history'>
+                            <div>Historial de conversaciones</div>
+                            <div className='chats-section'>
+                                {chats.length > 0 ? (
+                                    chats.map((chat) => (
+                                        <div key={chat.id} className="history_chats">
+                                            <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
+                                                {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
+                                            </button>
+                                            <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
+                                                <BsThreeDotsVertical />
+                                            </button>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p>No hay conversaciones cargadas</p>
+                                )}
+                            </div>
                         </div>
                     </div>
+                    <div className='left-bar-menu-down'>Planes de suscripción</div>
                 </div>
-                <div className='left-bar-menu-down'>Planes de suscripción</div>
             </div>
             <div className='main-content'>
-                {roleLocked ? "" : <h2>¿De qué quieres conversar hoy?</h2>}
-                <div className='message-display'>
-                    {messages.map((message, index) => (
-                        <div className='message-line'>
-                            <div key={index} className={index % 2 === 0 ? 'user-message' : 'ai-message'}>
-                                <div className='message-pack-1'>
-                                    <div className='message-pack-2'>
-                                        <strong>{message.sender}:</strong> 
-                                        <p>{message.text}</p>
+                <div className='header-chat'>
+                    <img
+                        className="main-logo"
+                        src={logo}
+                        alt="Qonverse Logo"
+                    />
+                </div>
+                <div className='qonversastion-section'>
+                    {roleLocked ? "" : <h2>¿De qué quieres conversar hoy?</h2>}
+                    <div className='message-display'>
+                        {messages.map((message, index) => (
+                            <div className='message-line'>
+                                <div key={index} className={index % 2 === 0 ? 'user-message' : 'ai-message'}>
+                                    <div className='message-pack-1'>
+                                        <div className='message-pack-2'>
+                                            <strong>{message.sender}:</strong> 
+                                            <p>{message.text}</p>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
-                    ))}
-                </div>
-                <div className='chat-area' style={{marginTop: "10px", border: "1px solid white", borderRadius: "20px", padding:"15px"}}>
-                    <div className='select-role'>
-                        <select id='role-select' value={selectedRole} onChange={handleRoleChange} disabled={roleLocked} style={{padding: "5px", border: "0px solid", backgroundColor: "#242424"}}>
-                            <option value="">Selecciona un Rol</option>
-                            <option value="Jefe">Jefe</option>
-                            <option value="Entrevistador">Entrevistador</option>
-                            <option value="Cliente Enfadado">Cliente Enfadado</option>
-                            <option value="Interés Amoroso">Interés Amoroso</option>
-                            <option value="Vecino Molesto">Vecino Molesto</option>
-                        </select>
+                        ))}
                     </div>
-
-                    <div className='text-area' style={{marginTop: "10px", boxSizing: "border-box", overflow: "hidden"}}>
-                        <textarea placeholder={placeHolderResponse ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} value={context} onChange={handleContextChange} rows={3} style={{width: "100%", resize: "none", fontSize: "15px", backgroundColor: "transparent", border: "none"}}></textarea>
-                    </div>
-
-                    <div className='option-area' style={{marginTop: "10px", display: "flex", alignItems: "center"}}>
-                        <div className='behavior-buttons'>
-                            <button onClick={() => handleBehaviorClick("Directo")} disabled={behaviorLocked} 
-                            style={{
-                                backgroundColor: selectedBehavior === "Directo" ? "#007bff2e" : "#1a1a1a5c", 
-                                color: selectedBehavior === "Directo" ? "#007BFF" : "white",
-                                borderRadius: "40px",
-                                marginRight: "15px"
-                            }}>Directo</button>
-
-                            <button onClick={() => handleBehaviorClick("Amigable")} disabled={behaviorLocked} 
-                            style={{
-                                backgroundColor: selectedBehavior === "Amigable" ? "#007bff2e" : "#1a1a1a5c", 
-                                color: selectedBehavior === "Amigable" ? "#007BFF" : "white",
-                                borderRadius: "40px",
-                                marginRight: "15px"
-                            }}>Amigable</button>
-
-                            <button onClick={() => handleBehaviorClick("Diplomático")} disabled={behaviorLocked} 
-                            style={{
-                                backgroundColor: selectedBehavior === "Diplomático" ? "#007bff2e" : "#1a1a1a5c",  
-                                color: selectedBehavior === "Diplomático" ? "#007BFF" : "white",
-                                borderRadius: "40px",
-                                marginRight: "30px"
-                            }}>Diplomático</button>
+                    <div className='chat-area' style={{marginTop: "10px", border: "1px solid white", borderRadius: "20px", padding:"15px"}}>
+                        <div className='select-role'>
+                            <select id='role-select' value={selectedRole} onChange={handleRoleChange} disabled={roleLocked} style={{padding: "5px", border: "0px solid", backgroundColor: "#242424"}}>
+                                <option value="">Selecciona un Rol</option>
+                                <option value="Jefe">Jefe</option>
+                                <option value="Entrevistador">Entrevistador</option>
+                                <option value="Cliente Enfadado">Cliente Enfadado</option>
+                                <option value="Interés Amoroso">Interés Amoroso</option>
+                                <option value="Vecino Molesto">Vecino Molesto</option>
+                            </select>
                         </div>
 
-                        <div className='action-buttons'>
-                            <button className='new-chat-button' onClick={startNewChat} style={{marginRight: "15px"}}><LuCircleFadingPlus /></button>
-                            <button className='send-button' disabled={context ? false : true} onClick={handleSendMessage}><IoSend /></button>
+                        <div className='text-area' style={{marginTop: "10px", boxSizing: "border-box", overflow: "hidden"}}>
+                            <textarea placeholder={placeHolderResponse ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} value={context} onChange={handleContextChange} rows={3} style={{width: "100%", resize: "none", fontSize: "15px", backgroundColor: "transparent", border: "none"}}></textarea>
+                        </div>
+
+                        <div className='option-area' style={{marginTop: "10px", display: "flex", alignItems: "center"}}>
+                            <div className='behavior-buttons'>
+                                <button onClick={() => handleBehaviorClick("Directo")} disabled={behaviorLocked} 
+                                style={{
+                                    backgroundColor: selectedBehavior === "Directo" ? "#007bff2e" : "#1a1a1a5c", 
+                                    color: selectedBehavior === "Directo" ? "#007BFF" : "white",
+                                    borderRadius: "40px",
+                                    marginRight: "15px"
+                                }}>Directo</button>
+
+                                <button onClick={() => handleBehaviorClick("Amigable")} disabled={behaviorLocked} 
+                                style={{
+                                    backgroundColor: selectedBehavior === "Amigable" ? "#007bff2e" : "#1a1a1a5c", 
+                                    color: selectedBehavior === "Amigable" ? "#007BFF" : "white",
+                                    borderRadius: "40px",
+                                    marginRight: "15px"
+                                }}>Amigable</button>
+
+                                <button onClick={() => handleBehaviorClick("Diplomático")} disabled={behaviorLocked} 
+                                style={{
+                                    backgroundColor: selectedBehavior === "Diplomático" ? "#007bff2e" : "#1a1a1a5c",  
+                                    color: selectedBehavior === "Diplomático" ? "#007BFF" : "white",
+                                    borderRadius: "40px",
+                                    marginRight: "30px"
+                                }}>Diplomático</button>
+                            </div>
+
+                            <div className='action-buttons'>
+                                <button className='new-chat-button' onClick={startNewChat} style={{marginRight: "15px"}}><LuCircleFadingPlus /></button>
+                                <button className='send-button' disabled={context ? false : true} onClick={handleSendMessage}><IoSend /></button>
+                            </div>
                         </div>
                     </div>
                 </div>

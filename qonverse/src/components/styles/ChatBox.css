@@ -2,18 +2,21 @@
     width: 100%;
     display: grid;
     grid-template-columns: 20% 80%;
-    padding: 30px;
+    padding: 3vh;
 }
 .main-content {
     display: flex;
     flex-direction: column;
-    justify-content: flex-end;
+    /*justify-content: flex-end;*/
+    justify-content: space-between;
 }
 .left-bar-menu {
     display: flex;
     flex-direction: column;
     justify-content: space-between;
     padding-right: 20px;
+    height: 90%;
+    overflow: hidden;
 }
 .message-line {
     width: 100%;
@@ -81,7 +84,7 @@
 }
 .message-display {
     overflow: auto;
-    max-height: 480px;
+    max-height: 450px;
     padding: 0px 20px;
 }
 .history_chats{
@@ -117,7 +120,7 @@
     color: #e3e3dd
 }
 .chats-section {
-    max-height: 70vh; 
+    max-height: 65vh; 
     overflow-y: auto;
     width: 100%;
     box-sizing: border-box;
@@ -129,29 +132,48 @@ button.button_history_chats {
 .new-chat button {
     width: 100%;
 }
+button#toggle-menu-btn {
+    color: white;
+    margin: 10px 0px;
+}
+/* EXPERIMENTAMOS MENU */
+.vertical-menu.menu-collapsed {
+    width: 0%;
+}
+.vertical-menu.menu-collapsed .left-bar-menu {
+    padding-right: 0%;
+}
+.chat-box.chat-box-collapsed {
+    grid-template-columns: 5% 95%;
+}
+/* Header Chat Back */
+.chat-box img.main-logo {
+    width: 10%;
+}
+
 /* Scrollbar Chats Style */
 /* WebKit browsers (Chrome, Edge, Safari, Opera) */
-.chats-section::-webkit-scrollbar {
+.chats-section::-webkit-scrollbar, .message-display::-webkit-scrollbar {
   width: 8px;
 }
-.chats-section::-webkit-scrollbar-track {
+.chats-section::-webkit-scrollbar-track, .message-display::-webkit-scrollbar-track {
   background: #f0f0f0;
   border-radius: 4px;
 }
-.chats-section::-webkit-scrollbar-thumb {
+.chats-section::-webkit-scrollbar-thumb, .message-display::-webkit-scrollbar-thumb {
   background-color: #888;
   border-radius: 4px;
   border: 40px solid transparent;
 }
-.chats-section::-webkit-scrollbar-thumb:hover {
+.chats-section::-webkit-scrollbar-thumb:hover, .message-display::-webkit-scrollbar-thumb:hover {
   background-color: #2a3e66 ;
 }
 /* Firefox */
-.chats-section {
+.chats-section, .message-display {
   scrollbar-width: thin;
   scrollbar-color: #0d1321 #37383a;
 }
 /* Opcional: evitar que la barra de scroll haga saltos */
-.chats-section {
+.chats-section, .message-display {
   -webkit-overflow-scrolling: touch; /* para scroll suave en iOS */
 }
