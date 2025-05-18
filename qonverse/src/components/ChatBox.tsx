@@ -228,6 +228,12 @@ const ChatBox = () => {
     const toggleMenu = () => {
         setMenuVisible(prev => !prev);
     };
+    const behaviors = ["Directo","Críptico","Amigable","Seco","Diplomático","Maleducado"];
+    const buttonStyle = (behavior:string) => ({
+        backgroundColor: selectedBehavior === behavior ? "#007bff2e" : "#1a1a1a5c",
+        color: selectedBehavior === behavior ? "#007BFF" : "white",
+        borderRadius: "40px"
+    });
 
     return (
         <div className={`chat-box ${menuVisible ? '' : 'chat-box-collapsed'}`}>
@@ -305,7 +311,7 @@ const ChatBox = () => {
 
                         <div className='option-area' style={{marginTop: "10px", display: "flex", alignItems: "center"}}>
                             <div className='behavior-buttons'>
-                                <button onClick={() => handleBehaviorClick("Directo")} disabled={behaviorLocked} 
+                                {/*<button onClick={() => handleBehaviorClick("Directo")} disabled={behaviorLocked} 
                                 style={{
                                     backgroundColor: selectedBehavior === "Directo" ? "#007bff2e" : "#1a1a1a5c", 
                                     color: selectedBehavior === "Directo" ? "#007BFF" : "white",
@@ -327,7 +333,17 @@ const ChatBox = () => {
                                     color: selectedBehavior === "Diplomático" ? "#007BFF" : "white",
                                     borderRadius: "40px",
                                     marginRight: "30px"
-                                }}>Diplomático</button>
+                                }}>Diplomático</button>*/}
+                                {behaviors.map((behavior) => (
+                                    <button
+                                        key={behavior}
+                                        onClick={() => handleBehaviorClick(behavior)}
+                                        disabled={behaviorLocked}
+                                        style={buttonStyle(behavior)}
+                                    >
+                                        {behavior}
+                                    </button>
+                                ))}
                             </div>
 
                             <div className='action-buttons'>
