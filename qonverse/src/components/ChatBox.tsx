@@ -5,10 +5,11 @@ import { RiDeleteBinLine } from "react-icons/ri";
 //import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
-import { useUser } from "@clerk/clerk-react";
+import { PricingTable, useUser } from "@clerk/clerk-react";
 import { initializeConversation, sendMessage, loadConversation, deleteConversation, checkAndUpdateLimits, updateLimits } from "../services/fireStoreService";
 import logo from '../assets/qonverse-v2.svg';
 import {  UserButton } from '@clerk/clerk-react';
+import SubscriptionModal from './SubscriptionModal';
 
 const ChatBox = () => {
     type Message = {
@@ -276,7 +277,9 @@ const ChatBox = () => {
     return (
         <div className={`chat-box ${menuVisible ? '' : 'chat-box-collapsed'}`}>
             <div className={`vertical-menu ${menuVisible ? '' : 'menu-collapsed'}`}>
-                <button id="toggle-menu-btn" onClick={toggleMenu}>☰</button>
+                <div className={`expander ${menuVisible ? '' : 'menu-collapsed'}`}>
+                    <button id="toggle-menu-btn" onClick={toggleMenu}>☰</button>
+                </div>
                 <div className='left-bar-menu'>
                     <div className='left-bar-menu-up'>
                         <div className='new-chat'>
@@ -305,7 +308,9 @@ const ChatBox = () => {
                         </div>
                     </div>
                     <div className='left-bar-menu-down'>
-                        <button>Planes de suscripción</button>
+                        {/*<button>Planes de suscripción</button>
+                        <PricingTable />*/}
+                        <SubscriptionModal />
                     </div>
                 </div>
             </div>
@@ -352,29 +357,6 @@ const ChatBox = () => {
 
                         <div className='option-area' style={{marginTop: "10px", display: "flex", alignItems: "center"}}>
                             <div className='behavior-buttons'>
-                                {/*<button onClick={() => handleBehaviorClick("Directo")} disabled={behaviorLocked} 
-                                style={{
-                                    backgroundColor: selectedBehavior === "Directo" ? "#007bff2e" : "#1a1a1a5c", 
-                                    color: selectedBehavior === "Directo" ? "#007BFF" : "white",
-                                    borderRadius: "40px",
-                                    marginRight: "15px"
-                                }}>Directo</button>
-
-                                <button onClick={() => handleBehaviorClick("Amigable")} disabled={behaviorLocked} 
-                                style={{
-                                    backgroundColor: selectedBehavior === "Amigable" ? "#007bff2e" : "#1a1a1a5c", 
-                                    color: selectedBehavior === "Amigable" ? "#007BFF" : "white",
-                                    borderRadius: "40px",
-                                    marginRight: "15px"
-                                }}>Amigable</button>
-
-                                <button onClick={() => handleBehaviorClick("Diplomático")} disabled={behaviorLocked} 
-                                style={{
-                                    backgroundColor: selectedBehavior === "Diplomático" ? "#007bff2e" : "#1a1a1a5c",  
-                                    color: selectedBehavior === "Diplomático" ? "#007BFF" : "white",
-                                    borderRadius: "40px",
-                                    marginRight: "30px"
-                                }}>Diplomático</button>*/}
                                 {hasPremiumAccess ? behaviorsPremium : behaviors .map((behavior) => (
                                     <button
                                         key={behavior}

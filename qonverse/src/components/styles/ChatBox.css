@@ -131,6 +131,10 @@ button#toggle-menu-btn {
     margin: 10px 0px;
 }
 /* EXPERIMENTAMOS MENU */
+.vertical-menu {
+    width: 100%;
+    transition: width 0.3s ease;
+}
 .vertical-menu.menu-collapsed {
     width: 0%;
 }
@@ -144,7 +148,15 @@ button#toggle-menu-btn {
 .chat-box img.main-logo {
     width: 10%;
 }
-
+.expander {
+    display: flex;
+    justify-content: flex-end;
+    padding-right: 20px;
+}
+.expander.menu-collapsed {
+    display: block;
+    padding-right: 0px;
+}
 /* Scrollbar Chats Style */
 /* WebKit browsers (Chrome, Edge, Safari, Opera) */
 .chats-section::-webkit-scrollbar, .message-display::-webkit-scrollbar {
