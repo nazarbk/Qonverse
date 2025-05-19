@@ -1,13 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef, useReducer } from 'react';
 import { LuCircleFadingPlus } from "react-icons/lu";
 import { IoSend } from "react-icons/io5";
-import { BsThreeDotsVertical } from "react-icons/bs";
+import { RiDeleteBinLine } from "react-icons/ri";
 //import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
 import { useUser } from "@clerk/clerk-react";
 import { initializeConversation, sendMessage, loadConversation, deleteConversation, checkAndUpdateLimits, updateLimits } from "../services/fireStoreService";
 import logo from '../assets/qonverse-v2.svg';
+import {  UserButton } from '@clerk/clerk-react';
 
 const ChatBox = () => {
     type Message = {
@@ -29,13 +30,23 @@ const ChatBox = () => {
     let airesponse = ""
     const [conversationId, setConversationId] = useState<string | "">("")
     const {user} = useUser()
+    const [hasPremiumAccess, setHasPremiumAccess] = useState(false)
     const [chats, setChats] = useState<any[]>([])
+    const [initialContext, setInitialContext] = useState("")
+    const scrollRef = useRef<HTMLDivElement>(null)
 
     useEffect(() => {
         if(user){
             handleLoadConversations()
+
+            const hasAccess = user.publicMetadata?.plan === "premium_plan"
+            setHasPremiumAccess(hasAccess)
         }
     }, [user])
+
+    useEffect(() => {
+        scrollRef.current?.scrollIntoView({behavior: "smooth"})
+    }, [messages])
 
 
     const handleRoleChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
@@ -70,7 +81,7 @@ const ChatBox = () => {
             return;
         }
 
-        const{ canStartConversation, canSendMessage } = await checkAndUpdateLimits(userId, conversationId);
+        const { canStartConversation, canSendMessage } = await checkAndUpdateLimits(userId, conversationId)
 
         if(!canStartConversation){
             alert("Has alcanzado el límite de 3 conversaciones por día. Adquiere el plan premium para continuar.")
@@ -82,43 +93,67 @@ const ChatBox = () => {
             return
         }
 
+        const userMessage = {sender: "Tú", text: context}
+        setMessages((prevMessages) => [...prevMessages, userMessage]) // Mostrar el mensaje del usuario de inmediato
+        setContext("") // Limpiar el campo de texto inmediatamente
+
         const apiKeyGem = import.meta.env.VITE_HUGGINGFACE_API_TOKEN
         const ai = new GoogleGenAI({apiKey: apiKeyGem})
 
-        const initialContext = `Contexto inicial: ${context}\n\n`
-        const recentMessages = messages.slice(-3).map((msg) => `${msg.sender}: ${msg.text}`).join("\n");
-
-        const fullContext = `${initialContext}${recentMessages}\nTú: ${context}` 
-
         async function main(context: any) {
-            let prompt = ""
-            //let prompt =  prompt = `Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.  La situación es la siguiente: \n${fullContext}.`
             try {
+                let prompt = ""
+                const recentMessages = messages.slice(-3).map((msg) => `${msg.sender}: ${msg.text}`).join("\n\n"); 
+                console.log("CONVER_IDDDD:", conversationId)
+                
                 if (roleLocked == false){
-                    prompt =`Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.
-                    La situación es la siguiente: ${context}.
-                    
-                    Quiero que te comportes a lo largo de toda esta conversación acorde a tu rol y mantengas el tono de acuerdo al comportamiento definido.
-                    Responde de manera coherente y sigue el flujo de la conversación teniendo en cuenta el contexto proporcionado.
-                    
-                    Si hay algún dato que no sepas sobre ti o sobre tu contexto inventatelo.
-                    No te salgas del rol en nigún momento, es decir si te hago una pregunta que no esté relacionada con el contexto de la conversación adviérteme.
-                    
-                    Comienza saludando y preguntando lo necesario para cumplir con tu rol de manera efectiva.
-                    
-                    Que quede claro que quiero que actues como tu rol. Yo seré el que tenga la conversación contigo intentando solucionar o lidiar con la situación del contexto.`
+                    prompt = `
+                        Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.
+                        La situación es la siguiente: ${context}.
+                        
+                        Quiero que te comportes a lo largo de toda esta conversación acorde a tu rol y mantengas el tono de acuerdo al comportamiento definido.
+                        Responde de manera coherente y sigue el flujo de la conversación teniendo en cuenta el contexto proporcionado.
+                        
+                        Si hay algún dato que no sepas sobre ti o sobre tu contexto inventatelo (como nombre, empresa, lugar, edad, etc..).
+                        No te salgas del rol en nigún momento, es decir si te hago una pregunta que no esté relacionada con el contexto de la conversación adviérteme.
+                        
+                        Comienza saludando y preguntando lo necesario para cumplir con tu rol de manera efectiva.
+                        
+                        Que quede claro que quiero que actues como tu rol. Yo seré el que tenga la conversación contigo intentando solucionar o lidiar con la situación del contexto.
+                    `
+
+                    setInitialContext(prompt)
+                }else{
+                    prompt = `
+                        Contexto Inicial:
+                        Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.
+                        La situación es la siguiente: ${initialContext}.
+                        
+                        Quiero que te comportes a lo largo de toda esta conversación acorde a tu rol y mantengas el tono de acuerdo al comportamiento definido.
+                        Responde de manera coherente y sigue el flujo de la conversación teniendo en cuenta el contexto proporcionado.
+                        
+                        Si hay algún dato que no sepas sobre ti o sobre tu contexto inventatelo (como nombre, empresa, lugar, edad, etc..).
+                        No te salgas del rol en nigún momento, es decir si te hago una pregunta que no esté relacionada con el contexto de la conversación adviérteme.
+                        
+                        Comienza saludando y preguntando lo necesario para cumplir con tu rol de manera efectiva.
+                        
+                        Que quede claro que quiero que actues como tu rol. Yo seré el que tenga la conversación contigo intentando solucionar o lidiar con la situación del contexto.
+
+                        Hilo de la conversación:
+                        ${recentMessages}
+
+                        Respuesta: ${context}
+                    `
                 }
-                else{
-                    prompt = context
-                }
-                console.log("PROMPT: ", prompt)
+
+                //console.log("PROMPT: ", prompt)
                 const response = await ai.models.generateContent({
                     model: "gemini-2.0-flash",
                     contents: prompt,
                 });
 
                 airesponse = response?.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo obtener respuesta de Gemini"
-                console.log("AIRESPONSE", airesponse)
+                //console.log("AIRESPONSE", airesponse)
             } catch (error) {
                 console.error("Error al llamar a Gemini:", error);
             }
@@ -128,7 +163,6 @@ const ChatBox = () => {
 
         if(selectedBehavior != "" && selectedRole != ""){
             if (context.trim()) {
-                const userMessage = {sender: "Tú", text: context}
                 const airesponse = await main(context)
                 const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: airesponse}
                 if (roleLocked == false){
@@ -140,8 +174,7 @@ const ChatBox = () => {
                     await handleLoadConversations()
                     await updateLimits(userId, conversationId, false)
                 }
-                setMessages([...messages, userMessage, simulatedResponse])
-                setContext("")
+                setMessages((prevMessages) => [...prevMessages, simulatedResponse])
                 setRoleLocked(true)
                 setBehaviorLocked(true)
                 setPlaceHolderResponse(true)
@@ -162,8 +195,10 @@ const ChatBox = () => {
     const handleLoadChat = async (chatId: string) => {
         const convers: Conversation[]  =  await loadConversation(user?.primaryEmailAddress?.emailAddress as string);
         const selectedConver = convers.find(chat => chat.id === chatId)
-
-        await setConversationId(chatId);
+        const selectedConverId = selectedConver?.id
+        
+        setConversationId(selectedConverId);
+        setInitialContext(selectedConver.messages[0].user)
         
         if (selectedConver){
             const behavior = selectedConver.behavior;
@@ -182,12 +217,12 @@ const ChatBox = () => {
                 loadedMessages.push(userMessage)
                 loadedMessages.push(simulatedResponse)
 
-                console.log("Mensaje de la IA: ", msg.ai)
-                console.log("Mensaje del Usuario: ", msg.user)
+                //console.log("Mensaje de la IA: ", msg.ai)
+                //console.log("Mensaje del Usuario: ", msg.user)
             })
 
             setMessages(loadedMessages)
-            console.log("Mensajes cargados: ", loadedMessages)
+            //console.log("Mensajes cargados: ", loadedMessages)
             console.log("Conversación Encontrada: ", selectedConver)
         }
     }
@@ -222,17 +257,20 @@ const ChatBox = () => {
         setSelectedBehavior("")
         setPlaceHolderResponse(false)
         setContext("")
+        setConversationId("")
     }
 
     const [menuVisible, setMenuVisible] = useState(true);
     const toggleMenu = () => {
         setMenuVisible(prev => !prev);
     };
-    const behaviors = ["Directo","Críptico","Amigable","Seco","Diplomático","Maleducado"];
+    const behaviors = ["Directo","Amigable","Diplomático"];
+    const behaviorsPremium = ["Directo","Críptico","Amigable","Seco","Diplomático","Maleducado"];
     const buttonStyle = (behavior:string) => ({
         backgroundColor: selectedBehavior === behavior ? "#007bff2e" : "#1a1a1a5c",
         color: selectedBehavior === behavior ? "#007BFF" : "white",
-        borderRadius: "40px"
+        borderRadius: "40px",
+        marginRight: "10px"
     });
 
     return (
@@ -256,7 +294,7 @@ const ChatBox = () => {
                                                 {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
                                             </button>
                                             <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
-                                                <BsThreeDotsVertical />
+                                                <RiDeleteBinLine />
                                             </button>
                                         </div>
                                     ))
@@ -266,7 +304,9 @@ const ChatBox = () => {
                             </div>
                         </div>
                     </div>
-                    <div className='left-bar-menu-down'>Planes de suscripción</div>
+                    <div className='left-bar-menu-down'>
+                        <button>Planes de suscripción</button>
+                    </div>
                 </div>
             </div>
             <div className='main-content'>
@@ -276,6 +316,7 @@ const ChatBox = () => {
                         src={logo}
                         alt="Qonverse Logo"
                     />
+                    <UserButton />
                 </div>
                 <div className='qonversastion-section'>
                     {roleLocked ? "" : <h2>¿De qué quieres conversar hoy?</h2>}
@@ -285,13 +326,13 @@ const ChatBox = () => {
                                 <div key={index} className={index % 2 === 0 ? 'user-message' : 'ai-message'}>
                                     <div className='message-pack-1'>
                                         <div className='message-pack-2'>
-                                            <strong>{message.sender}:</strong> 
                                             <p>{message.text}</p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         ))}
+                        <div ref={scrollRef}></div>
                     </div>
                     <div className='chat-area' style={{marginTop: "10px", border: "1px solid white", borderRadius: "20px", padding:"15px"}}>
                         <div className='select-role'>
@@ -334,7 +375,7 @@ const ChatBox = () => {
                                     borderRadius: "40px",
                                     marginRight: "30px"
                                 }}>Diplomático</button>*/}
-                                {behaviors.map((behavior) => (
+                                {hasPremiumAccess ? behaviorsPremium : behaviors .map((behavior) => (
                                     <button
                                         key={behavior}
                                         onClick={() => handleBehaviorClick(behavior)}
@@ -347,7 +388,6 @@ const ChatBox = () => {
                             </div>
 
                             <div className='action-buttons'>
-                                <button className='new-chat-button' onClick={startNewChat} style={{marginRight: "15px"}}><LuCircleFadingPlus /></button>
                                 <button className='send-button' disabled={context ? false : true} onClick={handleSendMessage}><IoSend /></button>
                             </div>
                         </div>

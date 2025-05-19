@@ -29,9 +29,6 @@
 .chat-area textarea {
     color: #e3e3dd;
 }
-.chat-area option, .chat-area select, .action-buttons button svg{
-    color: #e3e3dd;
-}
 .ai-message {
     display: flex;
     justify-content: flex-start;
@@ -58,24 +55,17 @@
     display: flex;
     flex-direction: column;
 }
-.user-message .message-pack-2 strong {
-    display: flex;
-    justify-content: flex-end;
-}
-.message-pack-2 {
+.user-message .message-pack-2 {
     display: flex;
     flex-direction: column;
     background-color: #3f3f3f;
-    border-radius: 20px;
+    border-radius: 20px 20px 0px 20px;
 }
-.user-message .message-pack-2 strong {
+.ai-message .message-pack-2 {
     display: flex;
-    justify-content: flex-end;
-}
-.message-pack-2 strong {
-    padding: 10px;
-    background-color: #343537;
-    border-radius: 20px 20px 0 0;
+    flex-direction: column;
+    background-color: #8cbed928;
+    border-radius: 0px 20px 20px 20px;
 }
 .message-pack-2 p {
     padding: 10px;
@@ -112,6 +102,10 @@
 .button_settings_chat{
     background-color: transparent;
     padding: 10px;
+    color: #c52222 !important;
+}
+.button_settings_chat:hover{
+    background-color: #4e3131;
 }
 .chats-history {
     padding: 25px 0px;
@@ -129,7 +123,7 @@
 button.button_history_chats {
     width: 100%;
 }
-.new-chat button {
+.new-chat button{
     width: 100%;
 }
 button#toggle-menu-btn {
@@ -176,4 +170,12 @@ button#toggle-menu-btn {
 /* Opcional: evitar que la barra de scroll haga saltos */
 .chats-section, .message-display {
   -webkit-overflow-scrolling: touch; /* para scroll suave en iOS */
+}
+.header-chat{
+    display: flex;
+    justify-content: space-between;
+}
+
+.left-bar-menu-down button{
+    width: 100%;
 }

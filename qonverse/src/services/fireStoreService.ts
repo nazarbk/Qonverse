@@ -69,7 +69,11 @@ export async function checkAndUpdateLimits(userId: string, conversationId?: stri
 
     const limits = docSnap.exists() ? docSnap.data() : {date: today, conversationCount: 0, messageCounts: {}}
 
+    console.log("LIMITE: ", limits.conversationCount)
+    console.log("CONV_ID: ", conversationId)
+
     if (limits.date !== today){
+        console.log("CCCCCCCC")
         await setDoc(limitsRef, {
             date: today,
             conversationCount: 0,
@@ -80,10 +84,12 @@ export async function checkAndUpdateLimits(userId: string, conversationId?: stri
         
 
     if (limits.conversationCount >= 3 && !conversationId) {
+        console.log("AAAAAAAA")
         return {canStartConversation: false, canSendMessage: false}
     }
 
     if (conversationId) {
+        console.log("BBBBBBBB")
         const messageCount = limits.messageCounts[conversationId] || 0
         if (messageCount >= 10){
             return {canStartConversation: true, canSendMessage: false}
