@@ -1,18 +1,14 @@
-import { SignedIn, SignedOut, SignInButton, UserButton } from '@clerk/clerk-react';
-import RoleSelectionModal from './components/RoleModal';
+import { SignedIn, SignedOut, SignInButton, UserButton, PricingTable } from '@clerk/clerk-react';
 import Home from './components/Home';
-import React from 'react';
-
+import ChatBox from './components/ChatBox';
 export default function App() {
-
-
   return (
     <main>
       <SignedOut>
         <Home />
       </SignedOut>
       <SignedIn>
-        <h2>¿De qué quieres conversar hoy?</h2>
+        <ChatBox />
       </SignedIn>
     </main>
   );

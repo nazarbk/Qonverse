@@ -1,6 +1,10 @@
 import React from "react";
 import HomeNav from "./HomeNav";
 import HomeMain from "./HomeMain";
+<<<<<<< HEAD
+=======
+import './styles/Home.css';
+>>>>>>> FrontEnd-Branch
 
 const Home = () => {
 
@@ -13,4 +17,3 @@ const Home = () => {
 };
 
 export default Home;
-
