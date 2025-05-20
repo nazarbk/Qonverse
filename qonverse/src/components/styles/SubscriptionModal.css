@@ -1,3 +1,20 @@
+.modal-sub div{
+  justify-content: center;
+  display: flex;
+  align-items: center;
+}
+.modal-sub div svg{
+  margin-right: 6px;
+  height: 20px;
+  width: 20px;
+}
+.modal-sub button{
+  background-color: #81818154;
+  border-radius: 12px;
+}
+.modal-sub button:hover{
+  background-color: #c5c5c554;
+}
 .modal-overlay {
   position: fixed;
   top: 0;

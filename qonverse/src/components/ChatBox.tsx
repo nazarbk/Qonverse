@@ -1,5 +1,5 @@
 import { useEffect, useState, useRef, useReducer } from 'react';
-import { LuCircleFadingPlus } from "react-icons/lu";
+import { RiChatAiLine } from "react-icons/ri";
 import { IoSend } from "react-icons/io5";
 import { RiDeleteBinLine } from "react-icons/ri";
 //import OpenAI from 'openai';
@@ -268,7 +268,7 @@ const ChatBox = () => {
     const behaviors = ["Directo","Amigable","Diplomático"];
     const behaviorsPremium = ["Directo","Críptico","Amigable","Seco","Diplomático","Maleducado"];
     const buttonStyle = (behavior:string) => ({
-        backgroundColor: selectedBehavior === behavior ? "#007bff2e" : "#1a1a1a5c",
+        backgroundColor: selectedBehavior === behavior ? "#007bff1a" : "#1a1a1a5c",
         color: selectedBehavior === behavior ? "#007BFF" : "white",
         borderRadius: "40px",
         marginRight: "10px"
@@ -284,15 +284,15 @@ const ChatBox = () => {
                     <div className='left-bar-menu-up'>
                         <div className='new-chat'>
                             <button onClick={startNewChat}>
-                                Nueva Conversación
+                                <div><RiChatAiLine /> Nueva Conversación</div>
                             </button>
                         </div>
                         <div className='chats-history'>
-                            <div>Historial de conversaciones</div>
+                            <p>Historial de conversaciones</p>
                             <div className='chats-section'>
                                 {chats.length > 0 ? (
                                     chats.map((chat) => (
-                                        <div key={chat.id} className="history_chats">
+                                        <div key={chat.id} className={`history_chats ${conversationId === chat.id ? 'selected_chat' : ''}`}>
                                             <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
                                                 {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
                                             </button>
@@ -308,7 +308,7 @@ const ChatBox = () => {
                         </div>
                     </div>
                     <div className='left-bar-menu-down'>
-                        {/*<button>Planes de suscripción</button>
+                        {/*<button className="planes-suscripcion">Planes de suscripción</button>
                         <PricingTable />*/}
                         <SubscriptionModal />
                     </div>
@@ -339,24 +339,26 @@ const ChatBox = () => {
                         ))}
                         <div ref={scrollRef}></div>
                     </div>
-                    <div className='chat-area' style={{marginTop: "10px", border: "1px solid white", borderRadius: "20px", padding:"15px"}}>
+                    <div className='chat-area'>
                         <div className='select-role'>
-                            <select id='role-select' value={selectedRole} onChange={handleRoleChange} disabled={roleLocked} style={{padding: "5px", border: "0px solid", backgroundColor: "#242424"}}>
-                                <option value="">Selecciona un Rol</option>
-                                <option value="Jefe">Jefe</option>
-                                <option value="Entrevistador">Entrevistador</option>
-                                <option value="Cliente Enfadado">Cliente Enfadado</option>
-                                <option value="Interés Amoroso">Interés Amoroso</option>
-                                <option value="Vecino Molesto">Vecino Molesto</option>
-                            </select>
+                            
                         </div>
 
-                        <div className='text-area' style={{marginTop: "10px", boxSizing: "border-box", overflow: "hidden"}}>
-                            <textarea placeholder={placeHolderResponse ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} value={context} onChange={handleContextChange} rows={3} style={{width: "100%", resize: "none", fontSize: "15px", backgroundColor: "transparent", border: "none"}}></textarea>
+                        <div className='text-area'>
+                            <textarea className='place-holder' placeholder={placeHolderResponse ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} value={context} onChange={handleContextChange} rows={3}></textarea>
                         </div>
 
                         <div className='option-area' style={{marginTop: "10px", display: "flex", alignItems: "center"}}>
                             <div className='behavior-buttons'>
+                                <select id='role-select' className="rol-selector" value={selectedRole} onChange={handleRoleChange} disabled={roleLocked} 
+                                style={{ marginRight: "10px"}}>
+                                    <option value="">Selecciona un Rol</option>
+                                    <option value="Jefe">Jefe</option>
+                                    <option value="Entrevistador">Entrevistador</option>
+                                    <option value="Cliente Enfadado">Cliente Enfadado</option>
+                                    <option value="Interés Amoroso">Interés Amoroso</option>
+                                    <option value="Vecino Molesto">Vecino Molesto</option>
+                                </select>
                                 {hasPremiumAccess ? behaviorsPremium : behaviors .map((behavior) => (
                                     <button
                                         key={behavior}
@@ -370,7 +372,7 @@ const ChatBox = () => {
                             </div>
 
                             <div className='action-buttons'>
-                                <button className='send-button' disabled={context ? false : true} onClick={handleSendMessage}><IoSend /></button>
+                                <button className={context ? "send_button_active" : "send_button"} disabled={context ? false : true} onClick={handleSendMessage}><IoSend /></button>
                             </div>
                         </div>
                     </div>

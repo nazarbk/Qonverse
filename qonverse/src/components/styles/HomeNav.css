@@ -14,17 +14,17 @@
 .home-nav-2 button {
   background: linear-gradient(
     135deg,
-    #8dd8e1 0%,
-    #018d83 40%,
-    #8dd8e1 60%,
-    #018d83 100%
+    #E2F1E7 0%,
+    #629584 40%,
+    #387478 60%,
+    #243642 100%
   );
   color: white;
   padding: 12px 24px;
   border: 1px solid #5accc6;
   border-radius: 8px;
   font-weight: bold;
-  font-size: 1rem;
+  font-size: 12px;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;

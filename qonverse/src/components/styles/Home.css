@@ -1,8 +1,7 @@
 .page-container { 
   background: radial-gradient(
-    ellipse at top,
     #3d5b97 0%,
     #2a3e66 30%,
-    #0d1321 100%
+    #070b16 100%
   );
 }

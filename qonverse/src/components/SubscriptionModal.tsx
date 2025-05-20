@@ -1,18 +1,25 @@
 import React, { useState } from 'react';
 import { PricingTable } from "@clerk/clerk-react";
 import './styles/SubscriptionModal.css';
+import { RiBillLine } from "react-icons/ri";
 
 const SubscriptionModal: React.FC = () => {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
     <>
-      <button
-        onClick={() => setIsOpen(true)}
-        className="open-modal-button"
-      >
-        Planes de suscripción
-      </button>
+      
+        <div className='modal-sub'>
+          <button
+            onClick={() => setIsOpen(true)}
+            className="open-modal-button"
+          >
+            <div className='plans-subs'>
+              <RiBillLine />Planes de suscripción
+            </div>
+          </button>
+        </div>
+        
 
       {isOpen && (
         <div className="modal-overlay">
