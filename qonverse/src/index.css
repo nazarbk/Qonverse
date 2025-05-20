@@ -101,16 +101,6 @@ button:focus-visible {
     );
 
 }
-<<<<<<< HEAD
-
-/* index.css o global
-html, body, #root {
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-*/
-=======
 */
 body, main, #root, .page-container {
   width: 100%;
@@ -124,4 +114,3 @@ body, main, #root, .page-container {
   flex-direction: row;
   justify-content: center;
 }
->>>>>>> FrontEnd-Branch

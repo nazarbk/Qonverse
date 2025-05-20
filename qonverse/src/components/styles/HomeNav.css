@@ -20,11 +20,10 @@
     #243642 100%
   );
   color: white;
-  padding: 12px 24px;
   border: 1px solid #5accc6;
   border-radius: 8px;
   font-weight: bold;
-  font-size: 12px;
+  font-size: 13px;
   cursor: pointer;
   text-transform: uppercase;
   letter-spacing: 1px;
