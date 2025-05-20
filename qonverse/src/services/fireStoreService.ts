@@ -1,5 +1,5 @@
 import { firestore } from "../firebase"
-import { collection, doc, setDoc, updateDoc, arrayUnion, getDocs, getDoc, Timestamp, deleteDoc } from "firebase/firestore"
+import { collection, doc, setDoc, updateDoc, arrayUnion, getDocs, getDoc, Timestamp, deleteDoc, query, orderBy } from "firebase/firestore"
 
 // Inicializar una nueva conversación
 export async function initializeConversation(userId: string, role: string, behavior: string) {
@@ -7,7 +7,8 @@ export async function initializeConversation(userId: string, role: string, behav
     await setDoc(conversationRef, {
         role: role,
         behavior: behavior,
-        messages: []
+        messages: [],
+        createdAt: Timestamp.now()
     })
 
     return conversationRef.id
@@ -29,8 +30,8 @@ export async function sendMessage(userId: string, conversationId: string, user: 
 
 // Cargar la conversación completa
 export async function loadConversation(userId: string) {
-    const conversationRef = collection(firestore, "conversations", userId, "chats")
-    const docSnap = await getDocs(conversationRef)
+    const q = query(collection(firestore, "conversations", userId, "chats"), orderBy("createdAt", "desc"))
+    const docSnap = await getDocs(q)
     
     const conversations = docSnap.docs.map((doc) => ({
         id: doc.id,
@@ -69,11 +70,7 @@ export async function checkAndUpdateLimits(userId: string, conversationId?: stri
 
     const limits = docSnap.exists() ? docSnap.data() : {date: today, conversationCount: 0, messageCounts: {}}
 
-    console.log("LIMITE: ", limits.conversationCount)
-    console.log("CONV_ID: ", conversationId)
-
     if (limits.date !== today){
-        console.log("CCCCCCCC")
         await setDoc(limitsRef, {
             date: today,
             conversationCount: 0,
@@ -84,12 +81,10 @@ export async function checkAndUpdateLimits(userId: string, conversationId?: stri
         
 
     if (limits.conversationCount >= 3 && !conversationId) {
-        console.log("AAAAAAAA")
         return {canStartConversation: false, canSendMessage: false}
     }
 
     if (conversationId) {
-        console.log("BBBBBBBB")
         const messageCount = limits.messageCounts[conversationId] || 0
         if (messageCount >= 10){
             return {canStartConversation: true, canSendMessage: false}

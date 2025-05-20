@@ -1,20 +1,22 @@
-import { useEffect, useState, useRef, useReducer } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { RiChatAiLine } from "react-icons/ri";
 import { IoSend } from "react-icons/io5";
 import { RiDeleteBinLine } from "react-icons/ri";
 //import OpenAI from 'openai';
 import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
-import { PricingTable, useUser } from "@clerk/clerk-react";
+import { useUser } from "@clerk/clerk-react";
 import { initializeConversation, sendMessage, loadConversation, deleteConversation, checkAndUpdateLimits, updateLimits } from "../services/fireStoreService";
 import logo from '../assets/qonverse-v2.svg';
 import {  UserButton } from '@clerk/clerk-react';
 import SubscriptionModal from './SubscriptionModal';
+import icono from '../assets/icono_qonverse.svg';
 
 const ChatBox = () => {
     type Message = {
         sender: string;
         text: string;
+        timestamp?: Date;
     };
     type Conversation = {
         id: string;
@@ -27,7 +29,6 @@ const ChatBox = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [roleLocked, setRoleLocked] = useState(false)
     const [behaviorLocked, setBehaviorLocked] = useState(false)
-    const [placeHolderResponse, setPlaceHolderResponse] = useState(false)
     let airesponse = ""
     const [conversationId, setConversationId] = useState<string | "">("")
     const {user} = useUser()
@@ -35,6 +36,8 @@ const ChatBox = () => {
     const [chats, setChats] = useState<any[]>([])
     const [initialContext, setInitialContext] = useState("")
     const scrollRef = useRef<HTMLDivElement>(null)
+    const [loadingResponde, setLoadingResponse] = useState(false)
+    const [typingMessage, setTypingMessage] = useState<string | null>(null)
 
     useEffect(() => {
         if(user){
@@ -94,10 +97,6 @@ const ChatBox = () => {
             return
         }
 
-        const userMessage = {sender: "Tú", text: context}
-        setMessages((prevMessages) => [...prevMessages, userMessage]) // Mostrar el mensaje del usuario de inmediato
-        setContext("") // Limpiar el campo de texto inmediatamente
-
         const apiKeyGem = import.meta.env.VITE_HUGGINGFACE_API_TOKEN
         const ai = new GoogleGenAI({apiKey: apiKeyGem})
 
@@ -123,7 +122,7 @@ const ChatBox = () => {
                         Que quede claro que quiero que actues como tu rol. Yo seré el que tenga la conversación contigo intentando solucionar o lidiar con la situación del contexto.
                     `
 
-                    setInitialContext(prompt)
+                    setInitialContext(context)
                 }else{
                     prompt = `
                         Contexto Inicial:
@@ -147,25 +146,30 @@ const ChatBox = () => {
                     `
                 }
 
-                //console.log("PROMPT: ", prompt)
+                console.log("PROMPT: ", prompt)
                 const response = await ai.models.generateContent({
                     model: "gemini-2.0-flash",
                     contents: prompt,
                 });
 
                 airesponse = response?.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo obtener respuesta de Gemini"
-                //console.log("AIRESPONSE", airesponse)
+                console.log("AIRESPONSE", airesponse)
             } catch (error) {
                 console.error("Error al llamar a Gemini:", error);
+                airesponse = "❌ Error al generar la respuesta. Inténtelo de Nuevo"
             }
 
             return airesponse
         }
 
         if(selectedBehavior != "" && selectedRole != ""){
+            const userMessage = {sender: "Tú", text: context}
+            setMessages((prevMessages) => [...prevMessages, userMessage]) // Mostrar el mensaje del usuario de inmediato
+            setContext("") // Limpiar el campo de texto inmediatamente
+            setLoadingResponse(true) // Mostrar el "cargando"
             if (context.trim()) {
                 const airesponse = await main(context)
-                const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: airesponse}
+                //const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: airesponse}
                 if (roleLocked == false){
                     await startNewConversation(user?.primaryEmailAddress?.emailAddress as string, selectedRole, selectedBehavior, airesponse)
                     await updateLimits(userId, conversationId, true)
@@ -175,10 +179,11 @@ const ChatBox = () => {
                     await handleLoadConversations()
                     await updateLimits(userId, conversationId, false)
                 }
-                setMessages((prevMessages) => [...prevMessages, simulatedResponse])
+                //setMessages((prevMessages) => [...prevMessages, simulatedResponse])
+                simulateTyping(airesponse, selectedRole + " (" + selectedBehavior + ")")
+                setLoadingResponse(false) // Ocultar el "cargando"
                 setRoleLocked(true)
                 setBehaviorLocked(true)
-                setPlaceHolderResponse(true)
                 
             }
         }else{
@@ -194,12 +199,14 @@ const ChatBox = () => {
     }
 
     const handleLoadChat = async (chatId: string) => {
+        setContext("")
         const convers: Conversation[]  =  await loadConversation(user?.primaryEmailAddress?.emailAddress as string);
         const selectedConver = convers.find(chat => chat.id === chatId)
         const selectedConverId = selectedConver?.id
         
         setConversationId(selectedConverId);
         setInitialContext(selectedConver.messages[0].user)
+        
         
         if (selectedConver){
             const behavior = selectedConver.behavior;
@@ -256,7 +263,6 @@ const ChatBox = () => {
         setRoleLocked(false)
         setSelectedRole("")
         setSelectedBehavior("")
-        setPlaceHolderResponse(false)
         setContext("")
         setConversationId("")
     }
@@ -274,6 +280,54 @@ const ChatBox = () => {
         marginRight: "10px"
     });
 
+    const displayedMessages = loadingResponde
+    ? [...messages, { sender: "IA", text: "Generando respuesta" }]
+    : messages;
+
+    const simulateTyping = (fullText: string, sender: string) => {
+        let index = 0
+        setTypingMessage("")
+
+        const interval = setInterval(() => {
+            setTypingMessage((prev) => (prev ?? "") + fullText.charAt(index))
+            index++
+            
+            if (index >= fullText.length){
+                clearInterval(interval)
+                setTypingMessage(null)
+                setMessages((prev) => [...prev, {sender, text: fullText}])
+            }
+        }, 40)
+    }
+
+    const groupChatsByDate = (chats) => {
+        const groups = {}
+
+        chats.forEach((chat) => {
+            const date = chat.createdAt?.toDate?.()
+                ? chat.createdAt.toDate().toLocaleDateString("es-ES")
+                : "Sin fecha"
+
+            if(!groups[date]){
+                groups[date] = []
+            }
+            groups[date].push(chat)
+        })
+
+        return groups
+    }
+
+    const groupedChats = groupChatsByDate(chats)
+
+    const handleKeyPress = (event: React.KeyboardEvent<HTMLTextAreaElement>) => {
+        if(event.key === "Enter" && !event.shiftKey) {
+            event.preventDefault() // Evita el salto de línea
+            if(context.trim() !== ""){
+                handleSendMessage()
+            }
+        }
+    }
+
     return (
         <div className={`chat-box ${menuVisible ? '' : 'chat-box-collapsed'}`}>
             <div className={`vertical-menu ${menuVisible ? '' : 'menu-collapsed'}`}>
@@ -290,15 +344,20 @@ const ChatBox = () => {
                         <div className='chats-history'>
                             <p>Historial de conversaciones</p>
                             <div className='chats-section'>
-                                {chats.length > 0 ? (
-                                    chats.map((chat) => (
-                                        <div key={chat.id} className={`history_chats ${conversationId === chat.id ? 'selected_chat' : ''}`}>
-                                            <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
-                                                {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
-                                            </button>
-                                            <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
-                                                <RiDeleteBinLine />
-                                            </button>
+                                {Object.entries(groupedChats).length > 0 ? (
+                                    Object.entries(groupedChats).map(([date, chats]) => (
+                                        <div key={date}>
+                                            <div className='date-separator'>{date}</div>
+                                            {chats.map((chat) => (
+                                                <div key={chat.id} className={`history_chats ${conversationId === chat.id ? 'selected_chat' : ''}`}>
+                                                    <button className='button_history_chats' onClick={() => handleLoadChat(chat.id)} title={chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}>
+                                                        {chat.messages.length > 0 ? chat.messages[0].user : "Sin mensajes"}
+                                                    </button>
+                                                    <button className='button_settings_chat' onClick={() => handleDeleteChat(chat.id)}>
+                                                        <RiDeleteBinLine />
+                                                    </button>
+                                                </div>
+                                            ))}
                                         </div>
                                     ))
                                 ) : (
@@ -326,17 +385,43 @@ const ChatBox = () => {
                 <div className='qonversastion-section'>
                     {roleLocked ? "" : <h2>¿De qué quieres conversar hoy?</h2>}
                     <div className='message-display'>
-                        {messages.map((message, index) => (
+                        {displayedMessages.map((message, index) => (
                             <div className='message-line'>
-                                <div key={index} className={index % 2 === 0 ? 'user-message' : 'ai-message'}>
-                                    <div className='message-pack-1'>
+                                <div key={index} className={message.sender === "Tú" ? 'user-message' : 'ai-message'}>
+                                    <div className='message-pack-1' style={{display: "flex", alignItems: "flex-start"}}>
+                                        {message.sender !== "Tú" && (
+                                            <img
+                                                className="icon_logo"
+                                                src={icono}
+                                                alt="Qonverse Icon"
+                                            />
+                                        )}
                                         <div className='message-pack-2'>
-                                            <p>{message.text}</p>
+                                            <p>
+                                                {message.text === "Generando respuesta" ? (
+                                                    <>
+                                                        <span className="spinner"></span> {message.text}
+                                                    </>
+                                                ) : ( message.text
+                                                )}
+                                            </p>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                         ))}
+                        {typingMessage !== null && (
+                            <div className='message-line'>
+                                <div className='ai-message'>
+                                <div className='message-pack-1' style={{ display: "flex", alignItems: "flex-start" }}>
+                                    <img className="icon_logo" src={icono} alt="Qonverse Icon" />
+                                    <div className='message-pack-2'>
+                                        <p>{typingMessage}</p>
+                                    </div>
+                                </div>
+                                </div>
+                            </div>
+                        )}
                         <div ref={scrollRef}></div>
                     </div>
                     <div className='chat-area'>
@@ -345,12 +430,19 @@ const ChatBox = () => {
                         </div>
 
                         <div className='text-area'>
-                            <textarea className='place-holder' placeholder={placeHolderResponse ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} value={context} onChange={handleContextChange} rows={3}></textarea>
+                            <textarea 
+                            className='place-holder' 
+                            placeholder={roleLocked ? 'Escribe aquí' : 'Indica el contexto de la conversación...'} 
+                            value={context} 
+                            onChange={handleContextChange} 
+                            onKeyDown={handleKeyPress}
+                            rows={3}
+                            ></textarea>
                         </div>
 
                         <div className='option-area' style={{marginTop: "10px", display: "flex", alignItems: "center"}}>
                             <div className='behavior-buttons'>
-                                <select id='role-select' className="rol-selector" value={selectedRole} onChange={handleRoleChange} disabled={roleLocked} 
+                                <select id='role-select' className={roleLocked ? "rol-selector_locked" : "rol-selector"} value={selectedRole} onChange={handleRoleChange} disabled={roleLocked} 
                                 style={{ marginRight: "10px"}}>
                                     <option value="">Selecciona un Rol</option>
                                     <option value="Jefe">Jefe</option>
