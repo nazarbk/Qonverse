@@ -3,7 +3,6 @@ import { RiChatAiLine } from "react-icons/ri";
 import { IoSend } from "react-icons/io5";
 import { RiDeleteBinLine } from "react-icons/ri";
 //import OpenAI from 'openai';
-import { GoogleGenAI } from '@google/genai';
 import './styles/ChatBox.css';
 import { useUser } from "@clerk/clerk-react";
 import { initializeConversation, sendMessage, loadConversation, deleteConversation, checkAndUpdateLimits, updateLimits } from "../services/fireStoreService";
@@ -44,7 +43,6 @@ const ChatBox = () => {
     const [messages, setMessages] = useState<Message[]>([]);
     const [roleLocked, setRoleLocked] = useState(false)
     const [behaviorLocked, setBehaviorLocked] = useState(false)
-    let airesponse = ""
     const [conversationId, setConversationId] = useState<string | "">("")
     const {user} = useUser()
     const [hasPremiumAccess, setHasPremiumAccess] = useState(false)
@@ -94,118 +92,59 @@ const ChatBox = () => {
 
     const handleSendMessage = async () => {
         const userId = user?.primaryEmailAddress?.emailAddress;
+        if (!userId) return;
 
-        if (!userId) {
-            console.log("No se encontró el email del usuario, no se puede enviar el mensaje.");
+        const { canStartConversation, canSendMessage } = await checkAndUpdateLimits(userId, conversationId);
+        if (!canStartConversation) {
+            alert("Has alcanzado el límite de 3 conversaciones por día.");
+            return;
+        }
+        if (!canSendMessage) {
+            alert("Has alcanzado el límite de mensajes en esta conversación.");
             return;
         }
 
-        const { canStartConversation, canSendMessage } = await checkAndUpdateLimits(userId, conversationId)
+        if (selectedBehavior && selectedRole && context.trim()) {
+            const userMessage = { sender: "Tú", text: context };
+            setMessages((prev) => [...prev, userMessage]);
+            setContext("");
+            setLoadingResponse(true);
 
-        if(!canStartConversation){
-            alert("Has alcanzado el límite de 3 conversaciones por día. Adquiere el plan premium para continuar.")
-            return
-        }
+            // Llamada segura al backend con el prompt
+            const response = await fetch("/api/generate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                context,
+                selectedRole,
+                selectedBehavior,
+                initialContext,
+                recentMessages: messages.slice(-3)
+            })
+            });
 
-        if(!canSendMessage){
-            alert("Has alcanzado el límite de mensajes en esta conversación. Adquiere el plan premium para continuar")
-            return
-        }
+            const data = await response.json();
+            const airesponse = data.response || "❌ No se pudo obtener respuesta.";
 
-        const apiKeyGem = import.meta.env.VITE_HUGGINGFACE_API_TOKEN
-        const ai = new GoogleGenAI({apiKey: apiKeyGem})
-
-        async function main(context: string) {
-            try {
-                let prompt = ""
-                const recentMessages = messages.slice(-3).map((msg) => `${msg.sender}: ${msg.text}`).join("\n\n"); 
-                console.log("CONVER_IDDDD:", conversationId)
-                
-                if (roleLocked == false){
-                    prompt = `
-                        Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.
-                        La situación es la siguiente: ${context}.
-                        
-                        Quiero que te comportes a lo largo de toda esta conversación acorde a tu rol y mantengas el tono de acuerdo al comportamiento definido.
-                        Responde de manera coherente y sigue el flujo de la conversación teniendo en cuenta el contexto proporcionado.
-                        
-                        Si hay algún dato que no sepas sobre ti o sobre tu contexto inventatelo (como nombre, empresa, lugar, edad, etc..).
-                        No te salgas del rol en nigún momento, es decir si te hago una pregunta que no esté relacionada con el contexto de la conversación adviérteme.
-                        
-                        Comienza saludando y preguntando lo necesario para cumplir con tu rol de manera efectiva.
-                        
-                        Que quede claro que quiero que actues como tu rol. Yo seré el que tenga la conversación contigo intentando solucionar o lidiar con la situación del contexto.
-                    `
-
-                    setInitialContext(context)
-                }else{
-                    prompt = `
-                        Contexto Inicial:
-                        Eres un ${selectedRole}, y tu tarea es actuar de manera ${selectedBehavior}.
-                        La situación es la siguiente: ${initialContext}.
-                        
-                        Quiero que te comportes a lo largo de toda esta conversación acorde a tu rol y mantengas el tono de acuerdo al comportamiento definido.
-                        Responde de manera coherente y sigue el flujo de la conversación teniendo en cuenta el contexto proporcionado.
-                        
-                        Si hay algún dato que no sepas sobre ti o sobre tu contexto inventatelo (como nombre, empresa, lugar, edad, etc..).
-                        No te salgas del rol en nigún momento, es decir si te hago una pregunta que no esté relacionada con el contexto de la conversación adviérteme.
-                        
-                        Comienza saludando y preguntando lo necesario para cumplir con tu rol de manera efectiva.
-                        
-                        Que quede claro que quiero que actues como tu rol. Yo seré el que tenga la conversación contigo intentando solucionar o lidiar con la situación del contexto.
-
-                        Hilo de la conversación:
-                        ${recentMessages}
-
-                        Respuesta: ${context}
-                    `
-                }
-
-                console.log("PROMPT: ", prompt)
-                const response = await ai.models.generateContent({
-                    model: "gemini-2.0-flash",
-                    contents: prompt,
-                });
-
-                airesponse = response?.candidates?.[0]?.content?.parts?.[0]?.text || "No se pudo obtener respuesta de Gemini"
-                console.log("AIRESPONSE", airesponse)
-            } catch (error) {
-                console.error("Error al llamar a Gemini:", error);
-                airesponse = "❌ Error al generar la respuesta. Inténtelo de Nuevo"
+            if (!roleLocked) {
+            await startNewConversation(userId, selectedRole, selectedBehavior, airesponse);
+            await updateLimits(userId, conversationId, true);
+            setInitialContext(context); // Guardamos el primer contexto
+            } else {
+            await sendMessage(userId, conversationId, context, airesponse);
+            await updateLimits(userId, conversationId, false);
+            await handleLoadConversations();
             }
 
-            return airesponse
+            simulateTyping(airesponse, `${selectedRole} (${selectedBehavior})`);
+            setLoadingResponse(false);
+            setRoleLocked(true);
+            setBehaviorLocked(true);
+        } else {
+            alert("Debes seleccionar un rol y un comportamiento");
         }
+    };
 
-        if(selectedBehavior != "" && selectedRole != ""){
-            const userMessage = {sender: "Tú", text: context}
-            setMessages((prevMessages) => [...prevMessages, userMessage]) // Mostrar el mensaje del usuario de inmediato
-            setContext("") // Limpiar el campo de texto inmediatamente
-            setLoadingResponse(true) // Mostrar el "cargando"
-            if (context.trim()) {
-                const airesponse = await main(context)
-                //const simulatedResponse = {sender: selectedRole + " (" + selectedBehavior + ")", text: airesponse}
-                if (roleLocked == false){
-                    await startNewConversation(user?.primaryEmailAddress?.emailAddress as string, selectedRole, selectedBehavior, airesponse)
-                    await updateLimits(userId, conversationId, true)
-                }
-                else{
-                    await sendMessage(user?.primaryEmailAddress?.emailAddress as string, conversationId, context, airesponse)
-                    await handleLoadConversations()
-                    await updateLimits(userId, conversationId, false)
-                }
-                //setMessages((prevMessages) => [...prevMessages, simulatedResponse])
-                simulateTyping(airesponse, selectedRole + " (" + selectedBehavior + ")")
-                setLoadingResponse(false) // Ocultar el "cargando"
-                setRoleLocked(true)
-                setBehaviorLocked(true)
-                
-            }
-        }else{
-            alert("Debes seleccionar un rol y un comportamiento")
-        }
-        
-    }
 
     const handleLoadConversations = async () => {
         if (user){
