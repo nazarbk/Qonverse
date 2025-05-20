@@ -1,7 +1,7 @@
 # Qonverse
 
 ## 💡 Descripción del proyecto: 
-**Qonverse** es una aplicación web inteeactiva diseñada para ayudar a los usuarios a mejorar sus habilidades comunicativas a través de conversaciones simuladas con inteligencia artificial. El proyecto ha sido desarrollado por un equipo de dos personas utilizando las tecnologías **React**, **Firebase** y **Clerk**.
+**Qonverse** es una aplicación web interactiva diseñada para ayudar a los usuarios a mejorar sus habilidades comunicativas a través de conversaciones simuladas con inteligencia artificial. El proyecto ha sido desarrollado por un equipo de dos personas utilizando las tecnologías **React**, **Firebase** y **Clerk**.
 
 La IA, impulsada por **Gemini 2.0 Flash**, adopta distintos roles y comportamientos definidos por el usuario para mantener conversaciones naturales, coherentes y contextuales. A medida que la conversación avanza, la IA recuerda el contexto original y los últimos mensajes, manteniendo así la coherencia temática y emocional del diálogo.
 
@@ -24,7 +24,7 @@ Accede directamente a la App desplegada en Vercel:
 
 ## 🥸 Explicación de cómo se ha utilizado Clerk: 
 
-# Gestión de usuarios con Clerk
+### Gestión de usuarios con Clerk
 La aplicación web utiliza **Clerk** para gestionar la autenticación, el registro y el control de acceso de los usuarios. Gracias a su integración con React, hemos implementado:
 - **Autenticación segura con correo electrónico.**
 - **Botón de usuario y control de sesión en el header.**
