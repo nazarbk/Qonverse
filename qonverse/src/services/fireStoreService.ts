@@ -56,7 +56,8 @@ export async function loadConversation(userId: string) {
         id: doc.id,
         behavior: data.behavior,
         role: data.role,
-        messages: data.messages || []
+        messages: data.messages || [],
+        createdAt: data.createdAt
     }
    })
     return conversations
