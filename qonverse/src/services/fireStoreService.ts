@@ -1,6 +1,18 @@
 import { firestore } from "../firebase"
 import { collection, doc, setDoc, updateDoc, arrayUnion, getDocs, getDoc, Timestamp, deleteDoc, query, orderBy } from "firebase/firestore"
 
+type ChatMessage = {
+    user: string;
+    ai: string;
+    timestamp: Timestamp;
+};
+type Chat = {
+    id: string;
+    behavior?: string;
+    role?: string;
+    messages: ChatMessage[];
+};
+
 // Inicializar una nueva conversación
 export async function initializeConversation(userId: string, role: string, behavior: string) {
     const conversationRef = doc(collection(firestore, "conversations", userId, "chats"))
@@ -33,12 +45,20 @@ export async function loadConversation(userId: string) {
     const q = query(collection(firestore, "conversations", userId, "chats"), orderBy("createdAt", "desc"))
     const docSnap = await getDocs(q)
     
-    const conversations = docSnap.docs.map((doc) => ({
+    /*const conversations = docSnap.docs.map((doc) => ({
         id: doc.id,
         ...doc.data()
-    }))
+    }))*/
+   const conversations: Chat[] = docSnap.docs.map((doc) => {
+    const data = doc.data();
 
-    console.log("Todas las conversaciones: ", conversations)
+    return{
+        id: doc.id,
+        behavior: data.behavior,
+        role: data.role,
+        messages: data.messages || []
+    }
+   })
     return conversations
 }
 

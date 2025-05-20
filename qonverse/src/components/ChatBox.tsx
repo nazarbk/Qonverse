@@ -11,6 +11,7 @@ import logo from '../assets/qonverse-v2.svg';
 import {  UserButton } from '@clerk/clerk-react';
 import SubscriptionModal from './SubscriptionModal';
 import icono from '../assets/icono_qonverse.svg';
+import { Timestamp } from "firebase/firestore";
 
 const ChatBox = () => {
     type Message = {
@@ -22,7 +23,21 @@ const ChatBox = () => {
         id: string;
         behavior?: string;
         role?: string;
+        messages: ChatMessage[];
     };
+    type ChatMessage = {
+        user: string;
+        ai: string;
+        timestamp: Timestamp;
+    };
+    type Chat = {
+        id: string;
+        behavior?: string;
+        role?: string;
+        messages: ChatMessage[];
+        createdAt?: Timestamp;
+    };
+
     const [selectedRole, setSelectedRole] = useState("")
     const [context, setContext] = useState("")
     const [selectedBehavior, setSelectedBehavior] = useState("")
@@ -33,7 +48,7 @@ const ChatBox = () => {
     const [conversationId, setConversationId] = useState<string | "">("")
     const {user} = useUser()
     const [hasPremiumAccess, setHasPremiumAccess] = useState(false)
-    const [chats, setChats] = useState<any[]>([])
+    const [chats, setChats] = useState<Chat[]>([])
     const [initialContext, setInitialContext] = useState("")
     const scrollRef = useRef<HTMLDivElement>(null)
     const [loadingResponde, setLoadingResponse] = useState(false)
@@ -100,7 +115,7 @@ const ChatBox = () => {
         const apiKeyGem = import.meta.env.VITE_HUGGINGFACE_API_TOKEN
         const ai = new GoogleGenAI({apiKey: apiKeyGem})
 
-        async function main(context: any) {
+        async function main(context: string) {
             try {
                 let prompt = ""
                 const recentMessages = messages.slice(-3).map((msg) => `${msg.sender}: ${msg.text}`).join("\n\n"); 
@@ -204,15 +219,23 @@ const ChatBox = () => {
         const selectedConver = convers.find(chat => chat.id === chatId)
         const selectedConverId = selectedConver?.id
         
-        setConversationId(selectedConverId);
-        setInitialContext(selectedConver.messages[0].user)
+        if(selectedConverId){
+            setConversationId(selectedConverId);
+        }
         
+        if(selectedConver){
+            setInitialContext(selectedConver?.messages[0].user)
+        } 
         
         if (selectedConver){
             const behavior = selectedConver.behavior;
             const rol = selectedConver.role
-            setSelectedRole(rol)
-            setSelectedBehavior(behavior)
+            if (rol){
+                setSelectedRole(rol)
+            }
+            if (behavior){
+                setSelectedBehavior(behavior)
+            }
             setBehaviorLocked(true)
             setRoleLocked(true)
 
@@ -300,8 +323,8 @@ const ChatBox = () => {
         }, 40)
     }
 
-    const groupChatsByDate = (chats) => {
-        const groups = {}
+    const groupChatsByDate = (chats: Chat[]) => {
+        const groups: {[date: string]: Chat[]} = {}
 
         chats.forEach((chat) => {
             const date = chat.createdAt?.toDate?.()
@@ -450,6 +473,16 @@ const ChatBox = () => {
                                     <option value="Cliente Enfadado">Cliente Enfadado</option>
                                     <option value="Interés Amoroso">Interés Amoroso</option>
                                     <option value="Vecino Molesto">Vecino Molesto</option>
+                                    {
+                                        hasPremiumAccess && (
+                                            <>
+                                            <option value="Amigo">Amigo</option>
+                                            <option value="Familiar">Familiar</option>
+                                            <option value="Profesor">Profesor</option>
+                                            <option value="Mentor">Mentor</option>
+                                            </>
+                                        )
+                                    }
                                 </select>
                                 {hasPremiumAccess ? behaviorsPremium : behaviors .map((behavior) => (
                                     <button
